@@ -83,9 +83,11 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             try{
                 // 在这里进行处理
-                pdrdata.process();
+                pdrdata.synchronize();
             } catch (Exception e) {
                 pdrdata.printdata();
+                // 同时进行报错
+                e.printStackTrace();
             }
 
 
@@ -325,9 +327,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 startTime = System.currentTimeMillis();
                 mode = 2;
-                sensorManager.registerListener(accelerometerEventListener, accelerometerSensor,20000);
-                sensorManager.registerListener(gyroscopeEventListener, gyroscopeSensor, 20000);
-                sensorManager.registerListener(magneticFieldEventListener, magneticFieldSensor, 20000);
+                sensorManager.registerListener(accelerometerEventListener, accelerometerSensor,SensorManager.SENSOR_DELAY_GAME);
+                sensorManager.registerListener(gyroscopeEventListener, gyroscopeSensor, SensorManager.SENSOR_DELAY_GAME);
+                sensorManager.registerListener(magneticFieldEventListener, magneticFieldSensor, SensorManager.SENSOR_DELAY_GAME);
                 handler.postDelayed(runnable, 400);
             }
         });
@@ -364,9 +366,9 @@ public class MainActivity extends AppCompatActivity {
                                     // 如果有权限，请求位置更新
                                     locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
                                 }
-                                sensorManager.registerListener(accelerometerEventListener, accelerometerSensor,20000);
-                                sensorManager.registerListener(gyroscopeEventListener, gyroscopeSensor, 20000);
-                                sensorManager.registerListener(magneticFieldEventListener, magneticFieldSensor, 20000);
+                                sensorManager.registerListener(accelerometerEventListener, accelerometerSensor,SensorManager.SENSOR_DELAY_GAME);
+                                sensorManager.registerListener(gyroscopeEventListener, gyroscopeSensor, SensorManager.SENSOR_DELAY_GAME);
+                                sensorManager.registerListener(magneticFieldEventListener, magneticFieldSensor, SensorManager.SENSOR_DELAY_GAME);
                                 
                             
                                 // 创建一个Handler来延迟执行代码
@@ -415,18 +417,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    // @Override
-    // protected void onResume() {
-    //     super.onResume();
-        
 
-    // }
-
-    // @Override
-    // protected void onPause() {
-    //     super.onPause();
-        
-    // }
 
 
 
