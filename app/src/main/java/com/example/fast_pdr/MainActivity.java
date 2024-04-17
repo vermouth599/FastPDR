@@ -193,23 +193,29 @@ public class MainActivity extends AppCompatActivity {
                     double accely = event.values[1]; // y轴方向上的加速度
                     double accelz = event.values[2]; // z轴方向上的加速度
 
+                    if (startTime == 0) {
+                        // 记录第一个传感器事件的时间戳
+                        startTime = event.timestamp;
+                    }
+                    
+                    
                     // 获取传感器回调的时间戳
                     long timestamp = event.timestamp;
-
-
-                    // 在这里进行您的逻辑处理
-                    // ...
-                    // 获取当前的时间戳
+                    
                     //long timestamp = System.currentTimeMillis();
 
-                    long elapsedTime = timestamp - startTime;//单位：毫秒
+                    long elapsedTime = timestamp - startTime;
+
+                    // 转换为毫秒，类型转换为double
+
+                    double elapsedTime_ = elapsedTime / 1000000.0;
 
                     // 更新UI界面，显示加速度数据
-                    String accelerationText = "2 "+ elapsedTime + " " + accelx + " " + accely + " " + accelz;
+                    String accelerationText = "2 "+ elapsedTime_ + " " + accelx + " " + accely + " " + accelz;
                     accelerationTextView.setText(accelerationText);
 
                     // 存储传感器数据到缓冲区
-                    pdrdata.addAccelData(elapsedTime,accelx, accely, accelz, mode);
+                    pdrdata.addAccelData(elapsedTime_,accelx, accely, accelz, mode);
                     
 
                     
@@ -241,17 +247,24 @@ public class MainActivity extends AppCompatActivity {
                     double gyroY = event.values[1]; // y轴方向上的角速度
                     double gyroZ = event.values[2]; // z轴方向上的角速度
 
+                    if (startTime == 0) {
+                        // 记录第一个传感器事件的时间戳
+                        startTime = event.timestamp;
+                    }
+                    
                     long timestamp = event.timestamp;
                     
                     // long timestamp = System.currentTimeMillis();
 
-                    long elapsedTime = timestamp - startTime; //单位：毫秒
+                    long elapsedTime = timestamp - startTime; 
+
+                    double elapsedTime_ = elapsedTime / 1000000.0;
                     // 将陀螺仪传感器数据合并为一个字符串
-                    String gyroscopeData = "1 "+ elapsedTime + " " + gyroX + " " + gyroY + " " + gyroZ;
+                    String gyroscopeData = "1 "+ elapsedTime_ + " " + gyroX + " " + gyroY + " " + gyroZ;
                     gyroTextView.setText(gyroscopeData);
                     
                     // 存储传感器数据到缓冲区
-                    pdrdata.addGyroData(elapsedTime, gyroX, gyroY, gyroZ, mode);
+                    pdrdata.addGyroData(elapsedTime_, gyroX, gyroY, gyroZ, mode);
 
                     charthelper2.addEntry(gyroX, gyroY, gyroZ);
 
@@ -279,16 +292,24 @@ public class MainActivity extends AppCompatActivity {
                     double magneticY = event.values[1]; // y轴方向上的磁场强度
                     double magneticZ = event.values[2]; // z轴方向上的磁场强度
 
+                    if (startTime == 0) {
+                        // 记录第一个传感器事件的时间戳
+                        startTime = event.timestamp;
+                    }
+                    
+                    
                     long timestamp = event.timestamp;
                     // long timestamp = System.currentTimeMillis();
 
                     long elapsedTime = timestamp - startTime; //单位：毫秒
+
+                    double elapsedTime_ = elapsedTime / 1000000.0;
                     // 将磁场传感器数据合并为一个字符串
-                    String magneticFieldData = "3 "+ elapsedTime + " " + magneticX + " " + magneticY + " " + magneticZ;
+                    String magneticFieldData = "3 "+ elapsedTime_ + " " + magneticX + " " + magneticY + " " + magneticZ;
                     magneticFieldTextView.setText(magneticFieldData);
                     
                     // 存储传感器数据到缓冲区
-                    pdrdata.addMagData(elapsedTime, magneticX, magneticY, magneticZ, mode);
+                    pdrdata.addMagData(elapsedTime_, magneticX, magneticY, magneticZ, mode);
 
                     charthelper3.addEntry(magneticX, magneticY, magneticZ);
 
@@ -309,15 +330,19 @@ public class MainActivity extends AppCompatActivity {
            @Override
            public void onLocationChanged(Location location) {
                 
-               long timestamp = location.getTime();
+               
+            
+               double timestamp = 0.0;
 
-               long elapsedTime = timestamp - startTime;
+               
+
+               
                // 获取位置信息
                double latitude = location.getLatitude();
                double longitude = location.getLongitude();
                double altitude = location.getAltitude();
 
-               pdrdata.addLocationData(elapsedTime, latitude, longitude, altitude);
+               pdrdata.addLocationData(timestamp, latitude, longitude, altitude);
 
                
                 
@@ -333,7 +358,7 @@ public class MainActivity extends AppCompatActivity {
         startButton.setOnClickListener(new View.OnClickListener() {
 
             public void onClick(View v) {
-                startTime = System.currentTimeMillis();
+                startTime = 0;
                 mode = 2;
                 sensorManager.registerListener(accelerometerEventListener, accelerometerSensor,SensorManager.SENSOR_DELAY_GAME);
                 sensorManager.registerListener(gyroscopeEventListener, gyroscopeSensor, SensorManager.SENSOR_DELAY_GAME);
@@ -362,7 +387,7 @@ public class MainActivity extends AppCompatActivity {
                         .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 // 用户点击OK按钮后，继续进行后续的逻辑操作
-                                startTime = System.currentTimeMillis();
+                                startTime = 0;
                                 mode = 1;
 
                                 // 首先注册GPS位置监听器

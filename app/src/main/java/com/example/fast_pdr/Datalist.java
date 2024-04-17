@@ -230,7 +230,7 @@ public class Datalist {
         }
     }
     
-    public void addAccelData(long timestamp, double x, double y, double z, int mode)
+    public void addAccelData(double timestamp, double x, double y, double z, int mode)
     {
         // 如果是静态
         if(mode == 1)
@@ -269,7 +269,7 @@ public class Datalist {
         }
     }
 
-    public void addMagData(long timestamp, double x, double y, double z, int mode)
+    public void addMagData(double timestamp, double x, double y, double z, int mode)
     {
         // 如果是静态
         if(mode == 1)
@@ -306,7 +306,7 @@ public class Datalist {
         }
     }
 
-    public void addLocationData(long timestamp, double x, double y, double z) 
+    public void addLocationData(double timestamp, double x, double y, double z) 
     {
         // 创建一个新的传感器数据对象
         SensorData sensorData = new SensorData(x, y, z, timestamp);
@@ -314,7 +314,7 @@ public class Datalist {
         Location_DataList.add(sensorData);
     }   
 
-    public void addGyroData(long timestamp, double x, double y, double z, int mode)
+    public void addGyroData(double timestamp, double x, double y, double z, int mode)
     {
         // 如果是静态
         if(mode == 1)

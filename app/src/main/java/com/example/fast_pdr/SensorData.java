@@ -5,9 +5,9 @@ public class SensorData {
     private double x;
     private double y;
     private double z;
-    private long timestamp;
+    private double timestamp;
 
-    public SensorData(double x, double y, double z, long timestamp) {
+    public SensorData(double x, double y, double z, double timestamp) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -26,7 +26,7 @@ public class SensorData {
         return z;
     }
 
-    public long getTimestamp() {
+    public double getTimestamp() {
         return timestamp;
     }
     
