@@ -193,10 +193,14 @@ public class MainActivity extends AppCompatActivity {
                     double accely = event.values[1]; // y轴方向上的加速度
                     double accelz = event.values[2]; // z轴方向上的加速度
 
+                    // 获取传感器回调的时间戳
+                    long timestamp = event.timestamp;
+
+
                     // 在这里进行您的逻辑处理
                     // ...
                     // 获取当前的时间戳
-                    long timestamp = System.currentTimeMillis();
+                    //long timestamp = System.currentTimeMillis();
 
                     long elapsedTime = timestamp - startTime;//单位：毫秒
 
@@ -237,7 +241,9 @@ public class MainActivity extends AppCompatActivity {
                     double gyroY = event.values[1]; // y轴方向上的角速度
                     double gyroZ = event.values[2]; // z轴方向上的角速度
 
-                    long timestamp = System.currentTimeMillis();
+                    long timestamp = event.timestamp;
+                    
+                    // long timestamp = System.currentTimeMillis();
 
                     long elapsedTime = timestamp - startTime; //单位：毫秒
                     // 将陀螺仪传感器数据合并为一个字符串
@@ -273,7 +279,8 @@ public class MainActivity extends AppCompatActivity {
                     double magneticY = event.values[1]; // y轴方向上的磁场强度
                     double magneticZ = event.values[2]; // z轴方向上的磁场强度
 
-                    long timestamp = System.currentTimeMillis();
+                    long timestamp = event.timestamp;
+                    // long timestamp = System.currentTimeMillis();
 
                     long elapsedTime = timestamp - startTime; //单位：毫秒
                     // 将磁场传感器数据合并为一个字符串
@@ -302,14 +309,15 @@ public class MainActivity extends AppCompatActivity {
            @Override
            public void onLocationChanged(Location location) {
                 
-               long timestamp = System.currentTimeMillis() - startTime;
-            
+               long timestamp = location.getTime();
+
+               long elapsedTime = timestamp - startTime;
                // 获取位置信息
                double latitude = location.getLatitude();
                double longitude = location.getLongitude();
                double altitude = location.getAltitude();
 
-               pdrdata.addLocationData(timestamp, latitude, longitude, altitude);
+               pdrdata.addLocationData(elapsedTime, latitude, longitude, altitude);
 
                
                 
