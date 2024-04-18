@@ -38,7 +38,8 @@ import com.github.mikephil.charting.charts.LineChart;
 import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 
-
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 
@@ -77,24 +78,30 @@ public class MainActivity extends AppCompatActivity {
 
     private Handler handler = new Handler();
     
+    // 创建一个单线程的ExecutorService
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    // todo: 将所有耗时的操作放到后台线程中执行
+
     private Runnable runnable = new Runnable() {
-        
         @Override
         public void run() {
-            try{
-                // 在这里进行处理
-                pdrdata.synchronize();
-            } catch (Exception e) {
-                pdrdata.printdata();
-                // 同时进行报错
-                e.printStackTrace();
-            }
-
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        // 在后台线程中执行耗时的操作
+                        pdrdata.synchronize();
+                    } catch (Exception e) {
+                        pdrdata.printdata();
+                        e.printStackTrace();
+                    }
+                }
+            });
 
             handler.postDelayed(this, 400);
         }
     };
-
     
 
 
@@ -374,7 +381,10 @@ public class MainActivity extends AppCompatActivity {
                 sensorManager.unregisterListener(accelerometerEventListener);
                 sensorManager.unregisterListener(gyroscopeEventListener);
                 sensorManager.unregisterListener(magneticFieldEventListener);
-                pdrdata.printdata();
+                // 停止Handler
+                handler.removeCallbacks(runnable);
+                pdrdata.printBuffer();
+                // pdrdata.printdata();
                 // sensorManager.unregisterListener(stepDetectorListener);
             }
         });
