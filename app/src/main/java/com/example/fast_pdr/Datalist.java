@@ -192,6 +192,15 @@ public class Datalist {
             double gyro_y_value;
             double gyro_z_value;
 
+            if (initial == false)
+            {
+                if(accel_timestamp[i] == last_time)
+                {
+                    last_index = i;
+                }
+
+            }
+
             try {
                 mag_x_value = mag_x_interpolator.value(accel_timestamp[i]);
                 mag_y_value = mag_y_interpolator.value(accel_timestamp[i]);
@@ -324,9 +333,15 @@ public class Datalist {
 
         }
 
-       
-        last_index = i - 1;
+        if(initial)
+        {
+            last_index = i - 1;
+            last_time = accel_timestamp[i - 1];
+            initial = false;
+        
+        }
         last_time = accel_timestamp[i - 1];
+        
         
         process_flag = true;
             
