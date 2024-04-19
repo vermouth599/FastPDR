@@ -124,13 +124,13 @@ public class Datalist {
         return list.size();
     }
 
-    /**
+    /********************************************************************************************
      * This method synchronizes the accelerometer, magnetometer, and gyroscope data.
      * It uses linear interpolation to align the timestamps of the magnetometer and gyroscope data with the accelerometer data.
      * If a timestamp from the accelerometer data is outside the range of the magnetometer or gyroscope data, it performs linear extrapolation.
      * It also performs a window smoothing operation on the data.
      * The synchronized data is stored in a buffer.
-     */
+     *********************************************************************************************/
 
     public void synchronize()
     {

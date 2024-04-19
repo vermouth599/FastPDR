@@ -24,6 +24,9 @@ import com.example.fast_pdr.LineChartHelper;
 import com.example.fast_pdr.SensorData;
 import com.example.fast_pdr.PDR;
 import com.example.fast_pdr.Datalist;
+import com.example.fast_pdr.StepInfo;
+import com.example.fast_pdr.StepDetectorHandler;
+import com.example.fast_pdr.StepDetectorListener;
 import java.util.ArrayList;
 
 //import javax.xml.crypto.Data;
@@ -44,7 +47,7 @@ import java.util.concurrent.Executors;
 
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity  extends AppCompatActivity {
 
     private SensorManager sensorManager;
     
@@ -58,8 +61,7 @@ public class MainActivity extends AppCompatActivity {
     private SensorEventListener magneticFieldEventListener;
     private Sensor magneticFieldSensor;
 
-    private SensorEventListener stepDetectorListener;
-    private Sensor stepDetector;
+    private StepDetectorHandler stepDetectorSensor;
 
     private LocationManager locationManager;
     private LocationListener locationListener;
@@ -69,6 +71,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView magneticFieldTextView;
 
     private TextView LocationTextView;
+
+    private TextView StepTextView;
 
     // 创建FileIO对象
     private FileIO fileIO;
@@ -127,6 +131,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void updateTextView(String text) {
+
+        StepTextView.setText(text);
+    }
+
 
 
 
@@ -139,6 +148,7 @@ public class MainActivity extends AppCompatActivity {
         gyroTextView = findViewById((R.id.gyroTextView));
         magneticFieldTextView = findViewById(R.id.magneticTextView);
         LocationTextView = findViewById(R.id.LocationTextView);
+        StepTextView = findViewById(R.id.StepTextView);
         Button startButton = findViewById(R.id.startButton); // 获取开始按钮的引用
         Button stopButton = findViewById(R.id.stopButton); // 获取停止按钮的引用
         Button initializeButton = findViewById(R.id.initializeButton);
@@ -184,8 +194,10 @@ public class MainActivity extends AppCompatActivity {
         gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         // 获取磁场传感器
         magneticFieldSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-
-
+        // 获取计步传感器
+        stepDetectorSensor = new StepDetectorHandler(this);
+        //stepDetectorSensor.setStepListener(this);
+        stepDetectorSensor.SensorChangeListener(new StepInfo());
 
         String fileName = "data.txt";
 
@@ -370,6 +382,8 @@ public class MainActivity extends AppCompatActivity {
                 sensorManager.registerListener(accelerometerEventListener, accelerometerSensor,SensorManager.SENSOR_DELAY_GAME);
                 sensorManager.registerListener(gyroscopeEventListener, gyroscopeSensor, SensorManager.SENSOR_DELAY_GAME);
                 sensorManager.registerListener(magneticFieldEventListener, magneticFieldSensor, SensorManager.SENSOR_DELAY_GAME);
+                stepDetectorSensor.setstarttime(startTime);
+                sensorManager.registerListener(stepDetectorSensor,sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),SensorManager.SENSOR_DELAY_GAME);
                 handler.postDelayed(runnable, 400);
             }
         });
@@ -381,6 +395,7 @@ public class MainActivity extends AppCompatActivity {
                 sensorManager.unregisterListener(accelerometerEventListener);
                 sensorManager.unregisterListener(gyroscopeEventListener);
                 sensorManager.unregisterListener(magneticFieldEventListener);
+                sensorManager.unregisterListener(stepDetectorSensor);
                 // 停止Handler
                 handler.removeCallbacks(runnable);
                 pdrdata.printBuffer();

@@ -52,6 +52,16 @@
             android:textColor="#000000"
             android:textSize="18sp" />
 
+        <TextView
+            android:id="@+id/StepTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#FFFFFF"
+            android:padding="10dp"
+            android:text="StepDetector"
+            android:textColor="#000000"
+            android:textSize="18sp" />
+
         <!-- Other view elements and layout -->
 
 
