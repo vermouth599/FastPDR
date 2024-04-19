@@ -8,7 +8,7 @@ import org.apache.commons.math3.complex.Quaternion;
 
 public class PDR {
 
-    // 定义一个常量
+    // 定义一个常量,武汉地区磁偏角
     public static final double D_CONSTANT = -5.0;
     
     private double accel_x;
@@ -31,12 +31,10 @@ public class PDR {
 
     /********************************************************
      * 初始化函数，计算加速度和磁场数据的平均值，并计算初始的角度。
-     *
+     * Author:lzy
      * @param accel_DataList 加速度数据列表
      * @param mag_DataList 磁场数据列表
-     * @param B 获取的纬度
-     * @param L 获取的经度
-     * @param H 获取的高度
+     * @param Location_DataList 初始经纬度列表
      *********************************************************/
     public void Initialize(ArrayList<SensorData> accel_DataList, ArrayList<SensorData> mag_DataList, ArrayList<SensorData> Location_DataList)
     {
@@ -73,9 +71,9 @@ public class PDR {
         double m_y = mag_y_ * Math.cos(initial_r) - mag_z_ * Math.sin(initial_r);
 
         double Phi_ = -Math.atan2(m_y, m_x);//rad
-        // 转换为deg
 
-        Phi_ = Phi_ * 180 / Math.PI;
+
+        Phi_ = Phi_ * 180 / Math.PI;//rad2deg
 
         Phi_m = Phi_ + D_CONSTANT;//deg
 

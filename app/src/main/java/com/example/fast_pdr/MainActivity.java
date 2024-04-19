@@ -229,6 +229,8 @@ public class MainActivity  extends AppCompatActivity {
 
                     double elapsedTime_ = elapsedTime / 1000000.0;
 
+                    stepDetectorSensor.from_accel(elapsedTime_,accelx,accely,accelz);
+
                     // 更新UI界面，显示加速度数据
                     String accelerationText = "2 "+ elapsedTime_ + " " + accelx + " " + accely + " " + accelz;
                     accelerationTextView.setText(accelerationText);
@@ -382,8 +384,8 @@ public class MainActivity  extends AppCompatActivity {
                 sensorManager.registerListener(accelerometerEventListener, accelerometerSensor,SensorManager.SENSOR_DELAY_GAME);
                 sensorManager.registerListener(gyroscopeEventListener, gyroscopeSensor, SensorManager.SENSOR_DELAY_GAME);
                 sensorManager.registerListener(magneticFieldEventListener, magneticFieldSensor, SensorManager.SENSOR_DELAY_GAME);
-                stepDetectorSensor.setstarttime(startTime);
-                sensorManager.registerListener(stepDetectorSensor,sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),SensorManager.SENSOR_DELAY_GAME);
+
+
                 handler.postDelayed(runnable, 400);
             }
         });
@@ -395,7 +397,6 @@ public class MainActivity  extends AppCompatActivity {
                 sensorManager.unregisterListener(accelerometerEventListener);
                 sensorManager.unregisterListener(gyroscopeEventListener);
                 sensorManager.unregisterListener(magneticFieldEventListener);
-                sensorManager.unregisterListener(stepDetectorSensor);
                 // 停止Handler
                 handler.removeCallbacks(runnable);
                 pdrdata.printBuffer();

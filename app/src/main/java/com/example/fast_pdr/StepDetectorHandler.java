@@ -8,7 +8,7 @@ import com.example.fast_pdr.StepInfo;
 
 import java.util.ArrayList;
 
-public class StepDetectorHandler implements SensorEventListener {
+public class StepDetectorHandler {
     
     //存放三轴数据
     private float[] oriValues = new float[3];
@@ -43,7 +43,6 @@ public class StepDetectorHandler implements SensorEventListener {
     //初始阈值
     private float ThreadValue = (float) 8.0;
 
-    private long startTime = 0;
 
     //private StepDetectorListener mStepListeners;
 
@@ -70,26 +69,20 @@ public class StepDetectorHandler implements SensorEventListener {
 	 * 对三轴数据进行平方和开根号的处理
 	 * 调用DetectorNewStep检测步子
 	 * */
-    @Override
-    public void onSensorChanged(SensorEvent event) {
+    
+    public void from_accel(double elapsed_time, double x, double y, double z) {
         
-        long timestamp = event.timestamp;
+        oriValues[0] = (float) x;
+        oriValues[1] = (float) y;
+        oriValues[2] = (float) z;
 
-        long elapsedtime = timestamp - startTime;
-
-        double time = (double) elapsedtime / 1000000.0;
-
-        for (int i = 0; i < 3; i++) {
-            oriValues[i] = event.values[i];
-        }
+        
         gravityNew = (float) Math.sqrt(oriValues[0] * oriValues[0]
                 + oriValues[1] * oriValues[1] + oriValues[2] * oriValues[2]);
-        DetectorNewStep(gravityNew,time);
+        DetectorNewStep(gravityNew,elapsed_time);
     }
 
-    public void setstarttime(long starttime) {
-        startTime = starttime;
-    }
+ 
 
 
      /*
@@ -112,16 +105,10 @@ public class StepDetectorHandler implements SensorEventListener {
                         // 记录数据
                         int frequency = mStepInfo.getFrequency();
                         mStepInfo.setFrequency(++frequency);
-                        // if (null != mStepListeners) {
-                        //     mStepListeners.onNewStep(0.8f);
-                        // }
+                       
                     }
                 }
-//                if (timeOfNow - timeOfLastPeak >= 250
-//                        && (peakOfWave - valleyOfWave >= initialValue)) {
-//                    timeOfThisPeak = timeOfNow;
-//                    ThreadValue = Peak_Valley_Thread(peakOfWave - valleyOfWave);
-//                }
+
             }
         }
         gravityOld = values;
@@ -171,7 +158,9 @@ public class StepDetectorHandler implements SensorEventListener {
         }
 
         if (!isDirectionUp && lastStatus
-                && (continueUpFormerCount >= 2 || oldValue >= 20)) {
+                && (continueUpFormerCount >= 2 || oldValue >= 10
+
+        )) {
             peakOfWave = oldValue;
             return true;
         } else if (!lastStatus && isDirectionUp) {
@@ -182,10 +171,7 @@ public class StepDetectorHandler implements SensorEventListener {
         }
     }
 
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // 在这里处理传感器精度的变化
-    }
+
 
 
 }
