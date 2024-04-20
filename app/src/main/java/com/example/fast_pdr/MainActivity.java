@@ -28,6 +28,7 @@ import com.example.fast_pdr.StepInfo;
 import com.example.fast_pdr.StepDetectorHandler;
 import com.example.fast_pdr.StepDetectorListener;
 import java.util.ArrayList;
+import com.example.fast_pdr.CanvasView;
 
 //import javax.xml.crypto.Data;
 
@@ -49,6 +50,7 @@ import java.util.concurrent.Executors;
 
 public class MainActivity  extends AppCompatActivity {
 
+    private CanvasView customCanvas;
     private SensorManager sensorManager;
     
     
@@ -78,7 +80,7 @@ public class MainActivity  extends AppCompatActivity {
     private FileIO fileIO;
 
     // 创建PDR对象
-    private PDR pdr = new PDR();
+    private PDR pdr;
 
     private Handler handler = new Handler();
     
@@ -164,8 +166,8 @@ public class MainActivity  extends AppCompatActivity {
         LineChart Mag_chart = (LineChart) findViewById(R.id.mag_chart);
         LineChartHelper charthelper3 = new LineChartHelper(Mag_chart);
         charthelper3.settitle("磁场传感器数据");
-        
-        
+
+        customCanvas = findViewById(R.id.Canvas);
 
 
         // 检查外部存储是否可用
@@ -178,7 +180,8 @@ public class MainActivity  extends AppCompatActivity {
         // 初始化FileIO对象
         fileIO = new FileIO(this);
         fileIO.setDirTime();
-        
+
+        pdr = new PDR(customCanvas);
         // 获取初始位置
 
 
@@ -384,7 +387,6 @@ public class MainActivity  extends AppCompatActivity {
                 sensorManager.registerListener(accelerometerEventListener, accelerometerSensor,SensorManager.SENSOR_DELAY_GAME);
                 sensorManager.registerListener(gyroscopeEventListener, gyroscopeSensor, SensorManager.SENSOR_DELAY_GAME);
                 sensorManager.registerListener(magneticFieldEventListener, magneticFieldSensor, SensorManager.SENSOR_DELAY_GAME);
-
 
                 handler.postDelayed(runnable, 400);
             }

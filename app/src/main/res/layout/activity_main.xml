@@ -89,6 +89,10 @@
             android:text="Stop"
             android:textAppearance="@style/TextAppearance.AppCompat.Display1"
             app:rippleColor="#FF80AB" />
+        <com.example.fast_pdr.CanvasView
+            android:id="@+id/Canvas"
+            android:layout_width="match_parent"
+            android:layout_height="300dp" />
 
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/accel_chart"

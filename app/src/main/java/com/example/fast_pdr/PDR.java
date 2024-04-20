@@ -2,13 +2,24 @@ package com.example.fast_pdr;
 import java.util.ArrayList;
 import java.util.List;
 import com.example.fast_pdr.SensorData;
+import android.util.Log;
 import java.lang.Math;
 import java.lang.reflect.Array;
 import Jama.Matrix;
 import org.apache.commons.math3.complex.Quaternion;
+import org.locationtech.proj4j.*;
+import com.example.fast_pdr.CanvasView;
 
 public class PDR {
 
+    // 
+    private CanvasView canvasView;
+
+    public PDR(CanvasView canvasView)
+    {
+        this.canvasView = canvasView;
+    }
+    
     // 定义一个常量,武汉地区磁偏角
     public static final double D_CONSTANT = -5.0;
     
@@ -57,6 +68,13 @@ public class PDR {
 
     // 用于统计步到了第几步
     public int step_index = 0;
+
+    // 步长
+    public double step_length_ = 0.0;
+
+    // 位置
+    public double X_ = 0.0;
+    public double Y_ = 0.0;
 
 
     /********************************************************
@@ -192,7 +210,7 @@ public class PDR {
        
        if (initial == true)
        {
-           for (i = 0; i <= last_index; i++)
+           for (i = 0; i < last_index; i++)
            {
                q_last = q_now;
                C_n_b = quaternion2Rotation(q_now);
@@ -227,22 +245,19 @@ public class PDR {
                Matrix e_mag = new Matrix(e_mag_);
                e = e_acc.plus(e_mag);
 
-               if(i == 0)
-               {    
-                   dt = Buff.get(i, 0) - 0.0;
-                   e_int = e_int.plus(e.times(dt));
-               }
-               else
-               {   dt = Buff.get(i, 0) - Buff.get(i - 1, 0);
-                   e_int = e_int.plus(e.times(dt));
-               }
+               
+                   
+               dt = Buff.get(i+1, 0) - Buff.get(i, 0);
+               e_int = e_int.plus(e.times(dt));
+               
                                    
                q_now = quaternion_update(q_now, Buff.get(i, 4), Buff.get(i, 5), Buff.get(i, 6), dt);
                
                if (step_index < steplist.size() && Buff.get(i, 0) == ((Double) steplist.get(step_index)).doubleValue())
                {
-                // TODO:更新位置   
-                step_index++;
+                // 更新
+                   location_update(q_now);
+                   step_index++;
                }
                
            }
@@ -250,7 +265,7 @@ public class PDR {
        }
        else
        {
-           for (i = last_index + 1; i < Buff.getRowDimension(); i++)
+           for (i = last_index; i < Buff.getRowDimension()-1; i++)
            {    
                 // 更新姿态
                q_last = q_now;
@@ -286,7 +301,7 @@ public class PDR {
                Matrix e_mag = new Matrix(e_mag_);              
                e = e_acc.plus(e_mag);
 
-               dt = Buff.get(i, 0) - Buff.get(i - 1, 0);
+               dt = Buff.get(i+1, 0) - Buff.get(i, 0);
 
                e_int = e_int.plus(e.times(dt));
 
@@ -294,8 +309,9 @@ public class PDR {
                if (step_index < steplist.size() && Buff.get(i, 0) == ((Double) steplist.get(step_index)).doubleValue())
                {
 
-                //TODO:更新位置
-                step_index++;
+                // 更新
+                   location_update(q_now);
+                   step_index++;
                }
 
            }
@@ -320,6 +336,36 @@ public class PDR {
         
         return new Quaternion(q0, q1, q2, q3).normalize();
         
+    }
+
+    // 从四元数到欧拉角
+    public double[] fromQuaternion(Quaternion q)
+    {
+        double w = q.getQ0();
+        double x = q.getQ1();
+        double y = q.getQ2();
+        double z = q.getQ3();
+
+        double roll = Math.atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y));
+        if(roll < 0)
+        {
+            roll = roll + 2 * Math.PI;
+        }
+        double pitch = Math.asin(2 * (w * y - z * x));
+        double yaw = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z));
+
+        return new double[]{roll, pitch, yaw}; // rad,rad,rad
+    }
+    
+    // 位置更新，只更新xy平面
+    public void location_update(Quaternion q_now)
+    {   
+        double[] euler = fromQuaternion(q_now);
+        double yaw = euler[2];//rad
+        X_ = X_ + step_length_ * Math.cos(yaw);
+        Y_ = Y_ + step_length_ * Math.sin(yaw);
+        canvasView.drawPoint((int)X_, (int)Y_);
+      
     }
 
 
