@@ -154,6 +154,11 @@ public class PDR {
         initial_theta = initial_theta * 180 / Math.PI; //rad to deg
         Phi_m = Phi_m * 180 / Math.PI; //rad to deg
 
+        X_ = 0.0;
+        Y_ = 0.0;
+
+        canvasView.drawPoint((int)X_, (int)Y_);
+
        
 
 
@@ -364,10 +369,11 @@ public class PDR {
         double yaw = euler[2];//rad
         X_ = X_ + step_length_ * Math.cos(yaw);
         Y_ = Y_ + step_length_ * Math.sin(yaw);
-        canvasView.drawPoint((int)X_, (int)Y_);
+        canvasView.drawPoint((float)X_, (float)Y_);
       
     }
 
+  
 
     
     

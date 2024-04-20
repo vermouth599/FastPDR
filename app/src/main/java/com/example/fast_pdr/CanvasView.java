@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
+import android.graphics.PointF;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -22,8 +23,8 @@ public class CanvasView extends View{
     private float mX, mY;
     private static final float TOLERANCE = 5;
     boolean initialized = false;
-    private Point mPoint = new Point(0,0);
-    private List<Point> historyPoints = new ArrayList<Point>();
+    private PointF mPoint = new PointF(5,5);
+    private List<PointF> historyPoints = new ArrayList<PointF>();
 
     public CanvasView(Context c, AttributeSet attrs) {
         super(c, attrs);
@@ -69,25 +70,31 @@ public class CanvasView extends View{
             canvas.drawPath(mPath, mPaint);
             mPaint.setStrokeWidth(1f);
             canvas.drawText("5m", width/2 + 45, height/2 + 14, mPaint);
-            mPaint.setStrokeWidth(4f);
+            mPaint.setStrokeWidth(10);
+
+            float centerX = width / 2f;
+            float centerY = height / 2f;
 
             initialized = true;
+            mPaint.setColor(Color.RED);
+            canvas.drawPoint(centerX, centerY, mPaint);
+            
             // set color to green then
             mPaint.setColor(Color.GREEN);
-            for (Point p : historyPoints){
+            for (PointF p : historyPoints){
                 canvas.drawPoint(p.x, p.y, mPaint);
             }
         }
-        {
-            mPaint.setColor(Color.RED);
-            canvas.drawPoint(mPoint.x, mPoint.y, mPaint);
-        }
+        
     }
 
-    public void drawPoint(int x, int y) {
-        mPoint.x = x;
-        mPoint.y = y;
-        historyPoints.add(new Point(x, y));
+    public void drawPoint(float x, float y) {
+        // mPoint.x = x;
+        // mPoint.y = y;
+        // 求该点相对于中心点的坐标
+        x = x + width / 2;
+        y = height / 2 - y;
+        historyPoints.add(new PointF(x, y));
         invalidate();
     }
 
@@ -96,5 +103,17 @@ public class CanvasView extends View{
         mPath.reset();
         historyPoints.clear();
         invalidate();
+    }
+
+
+    public void testDraw() {
+        if (initialized) {
+            drawPoint(5, 5);
+            drawPoint(10, 10);
+            drawPoint(15, 15);
+            drawPoint(20, 20);
+            drawPoint(25, 25);
+            drawPoint(30, 30);
+        }
     }
 }

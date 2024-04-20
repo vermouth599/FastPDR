@@ -167,8 +167,8 @@ public class MainActivity  extends AppCompatActivity {
         LineChartHelper charthelper3 = new LineChartHelper(Mag_chart);
         charthelper3.settitle("磁场传感器数据");
 
-        customCanvas = findViewById(R.id.Canvas);
-
+        customCanvas = (CanvasView) findViewById(R.id.Canvas);
+        customCanvas.drawPoint(5, 5);
 
         // 检查外部存储是否可用
         // 检查是否已经有了写入外部存储的权限
@@ -387,7 +387,6 @@ public class MainActivity  extends AppCompatActivity {
                 sensorManager.registerListener(accelerometerEventListener, accelerometerSensor,SensorManager.SENSOR_DELAY_GAME);
                 sensorManager.registerListener(gyroscopeEventListener, gyroscopeSensor, SensorManager.SENSOR_DELAY_GAME);
                 sensorManager.registerListener(magneticFieldEventListener, magneticFieldSensor, SensorManager.SENSOR_DELAY_GAME);
-
                 handler.postDelayed(runnable, 400);
             }
         });
