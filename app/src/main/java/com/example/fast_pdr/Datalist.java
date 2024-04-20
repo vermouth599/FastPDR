@@ -340,6 +340,7 @@ public class Datalist {
             initial = false;
         
         }
+        
         last_time = accel_timestamp[i - 1];
         
         
