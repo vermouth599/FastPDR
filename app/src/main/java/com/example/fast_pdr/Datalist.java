@@ -35,6 +35,10 @@ public class Datalist {
 
     boolean process_flag = false;
 
+    boolean out_of_index = false;
+
+    int buff_count = 0 ;
+
 
     // 设置一个大缓冲区，在完成时间戳对齐之后，将数据存储到这个缓冲区中
     // 用于存储最终的数据
@@ -110,6 +114,39 @@ public class Datalist {
 
         
     }
+    // 去除accel_DataList中超出范围的数据
+    public void cleanAccelData()
+    {
+        // 获取accel_DataList中的第一个数据的时间戳
+        double first_timestamp = accel_DataList.get(0).getTimestamp();
+        // 获取accel_DataList中的最后一个数据的时间戳
+        double last_timestamp = accel_DataList.get(accel_DataList.size() - 1).getTimestamp();
+        // 获取mag_DataList中的第一个数据的时间戳
+        double mag_first_timestamp = mag_DataList.get(0).getTimestamp();
+        // 获取mag_DataList中的最后一个数据的时间戳
+        double mag_last_timestamp = mag_DataList.get(mag_DataList.size() - 1).getTimestamp();
+        // 获取gyro_DataList中的第一个数据的时间戳
+        double gyro_first_timestamp = gyro_DataList.get(0).getTimestamp();
+        // 获取gyro_DataList中的最后一个数据的时间戳
+        double gyro_last_timestamp = gyro_DataList.get(gyro_DataList.size() - 1).getTimestamp();
+
+        // 如果accel_DataList中的第一个数据的时间戳小于mag_DataList中的第一个数据的时间戳
+        if(first_timestamp < mag_first_timestamp|| first_timestamp < gyro_first_timestamp)
+        {
+            // 删除accel_DataList中的第一个数据
+            accel_DataList.remove(0);
+        }
+        // // 如果accel_DataList中的最后一个数据的时间戳大于mag_DataList中的最后一个数据的时间戳
+        // if(last_timestamp > mag_last_timestamp || last_timestamp > gyro_last_timestamp)
+        // {
+        //     // 删除accel_DataList中的最后一个数据
+        //     accel_DataList.remove(accel_DataList.size() - 1);
+        // }
+
+        
+    }
+
+
     public int getarrayfromlist(ArrayList<SensorData> list, Matrix array)
     {
         // 将list中的数据转换为Matrix
@@ -140,6 +177,9 @@ public class Datalist {
         // 创建一个插值器
         LinearInterpolator interpolator = new LinearInterpolator();
 
+        // 清洗数据
+        cleanAccelData();
+
         // 转换list为array
         int accel_count = getarrayfromlist(accel_DataList, accel_array);
         int mag_count = getarrayfromlist(mag_DataList, mag_array);
@@ -163,6 +203,12 @@ public class Datalist {
         double[] gyro_y = gyro_array.getMatrix(0, gyro_count - 1, 2, 2).getColumnPackedCopy();
         double[] gyro_z = gyro_array.getMatrix(0, gyro_count - 1, 3, 3).getColumnPackedCopy();
 
+        // 获取 gyro_time 和 mag_time 的最大值和最小值
+        double gyro_max = gyro_time[gyro_count - 1];
+        double gyro_min = gyro_time[0];
+        double mag_max = mag_time[mag_count - 1];
+        double mag_min = mag_time[0];
+
         
         
         
@@ -178,19 +224,22 @@ public class Datalist {
         int windowSize = 3;
         // 对于每一个accel的时间戳，找到对应的mag和gyro的数据
 
+        out_of_index = false;
+
+
         for(i = 0; i < accel_timestamp.length; i++)
         {
             double accel_x_value;
             double accel_y_value;
             double accel_z_value;
 
-            double mag_x_value;
-            double mag_y_value;
-            double mag_z_value;
+            double mag_x_value = 0;
+            double mag_y_value = 0;
+            double mag_z_value = 0;
 
-            double gyro_x_value;
-            double gyro_y_value;
-            double gyro_z_value;
+            double gyro_x_value = 0;
+            double gyro_y_value = 0;
+            double gyro_z_value = 0;
 
             if (initial == false)
             {
@@ -201,7 +250,16 @@ public class Datalist {
 
             }
 
-            try {
+            
+            if(accel_timestamp[i] > gyro_max || accel_timestamp[i] > mag_max)
+            {
+                // 如果时间戳大于mag和gyro的最大值，这个数据仅仅会出现在最后一个数据中
+                // 不处理即可，下一个runnable中会处理
+                out_of_index = true;
+                continue;
+            }
+            else
+            {
                 mag_x_value = mag_x_interpolator.value(accel_timestamp[i]);
                 mag_y_value = mag_y_interpolator.value(accel_timestamp[i]);
                 mag_z_value = mag_z_interpolator.value(accel_timestamp[i]);
@@ -209,40 +267,9 @@ public class Datalist {
                 gyro_x_value = gyro_x_interpolator.value(accel_timestamp[i]);
                 gyro_y_value = gyro_y_interpolator.value(accel_timestamp[i]);
                 gyro_z_value = gyro_z_interpolator.value(accel_timestamp[i]);
-            } catch (OutOfRangeException e) {
-                // 在定义域之外，进行线性外推
-                double slope, intercept;
-        
-                // 对于mag_x
-                slope = (mag_x[mag_x.length - 1] - mag_x[mag_x.length - 2]) / (mag_time[mag_time.length - 1] - mag_time[mag_time.length - 2]);
-                intercept = mag_x[mag_x.length - 1] - slope * mag_time[mag_time.length - 1];
-                mag_x_value = slope * accel_timestamp[i] + intercept;
-        
-                // 对于mag_y
-                slope = (mag_y[mag_y.length - 1] - mag_y[mag_y.length - 2]) / (mag_time[mag_time.length - 1] - mag_time[mag_time.length - 2]);
-                intercept = mag_y[mag_y.length - 1] - slope * mag_time[mag_time.length - 1];
-                mag_y_value = slope * accel_timestamp[i] + intercept;
-        
-                // 对于mag_z
-                slope = (mag_z[mag_z.length - 1] - mag_z[mag_z.length - 2]) / (mag_time[mag_time.length - 1] - mag_time[mag_time.length - 2]);
-                intercept = mag_z[mag_z.length - 1] - slope * mag_time[mag_time.length - 1];
-                mag_z_value = slope * accel_timestamp[i] + intercept;
-        
-                // 对于gyro_x
-                slope = (gyro_x[gyro_x.length - 1] - gyro_x[gyro_x.length - 2]) / (gyro_time[gyro_time.length - 1] - gyro_time[gyro_time.length - 2]);
-                intercept = gyro_x[gyro_x.length - 1] - slope * gyro_time[gyro_time.length - 1];
-                gyro_x_value = slope * accel_timestamp[i] + intercept;
-        
-                // 对于gyro_y
-                slope = (gyro_y[gyro_y.length - 1] - gyro_y[gyro_y.length - 2]) / (gyro_time[gyro_time.length - 1] - gyro_time[gyro_time.length - 2]);
-                intercept = gyro_y[gyro_y.length - 1] - slope * gyro_time[gyro_time.length - 1];
-                gyro_y_value = slope * accel_timestamp[i] + intercept;
-        
-                // 对于gyro_z
-                slope = (gyro_z[gyro_z.length - 1] - gyro_z[gyro_z.length - 2]) / (gyro_time[gyro_time.length - 1] - gyro_time[gyro_time.length - 2]);
-                intercept = gyro_z[gyro_z.length - 1] - slope * gyro_time[gyro_time.length - 1];
-                gyro_z_value = slope * accel_timestamp[i] + intercept;
+
             }
+
             
            
             
@@ -333,15 +360,42 @@ public class Datalist {
 
         }
 
-        if(initial)
+
+        if(initial == true)
         {
-            last_index = i - 1;
-            last_time = accel_timestamp[i - 1];
+            if(out_of_index == true)
+            {
+                last_index = i - 2;
+                last_time = accel_timestamp[i - 2];
+                buff_count = i - 1;
+                out_of_index = false;
+            }
+            else
+            {
+                last_index = i - 1;
+                last_time = accel_timestamp[i - 1];
+                buff_count = i;
+            }
+
+
             initial = false;
         
         }
+        else {
+
+            if (out_of_index == true) {
+                last_time = accel_timestamp[i - 2];
+                buff_count = i - 1;
+                out_of_index = false;
+            }
+            else
+            {   
+                buff_count = i;
+                last_time = accel_timestamp[i - 1];
+            }
+        }
         
-        last_time = accel_timestamp[i - 1];
+
         
         
         process_flag = true;

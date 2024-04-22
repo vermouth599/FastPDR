@@ -43,10 +43,10 @@ public class StepDetectorHandler {
     //初始阈值
     private float ThreadValue = (float) 8.0;
 
-
+    private float interval = (float) 500;
     //private StepDetectorListener mStepListeners;
 
-    private ArrayList stepList = new ArrayList();
+    public ArrayList stepList = new ArrayList();
 
     private StepInfo mStepInfo;
     
@@ -82,6 +82,16 @@ public class StepDetectorHandler {
         DetectorNewStep(gravityNew,elapsed_time);
     }
 
+
+    // 从外部设置参数
+    public void setThreadValue(float threadValue) {
+        this.ThreadValue = threadValue;
+    }
+
+    public void setInterval(float interval) {
+        this.interval = interval;
+    }
+
  
 
 
@@ -98,7 +108,7 @@ public class StepDetectorHandler {
             if (DetectorPeak(values, gravityOld)) {
                 timeOfLastPeak = timeOfThisPeak;
                 timeOfNow = elapsedtime;
-                if (timeOfNow - timeOfLastPeak >= 250
+                if (timeOfNow - timeOfLastPeak >= interval
                         && (peakOfWave - valleyOfWave >= ThreadValue)) {
                     timeOfThisPeak = timeOfNow;
                     if (DetectorEffectCalculate()) {

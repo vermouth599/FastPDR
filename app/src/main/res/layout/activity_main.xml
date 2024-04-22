@@ -63,7 +63,19 @@
             android:textSize="18sp" />
 
         <!-- Other view elements and layout -->
+        <EditText
+            android:id="@+id/stepDetectorThreadValue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="步态探测ThreadValue"
+            android:inputType="number" />
 
+        <EditText
+            android:id="@+id/stepDetectorInterval"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="步态探测间隔"
+            android:inputType="number" />
 
         <Button
             android:id="@+id/initializeButton"

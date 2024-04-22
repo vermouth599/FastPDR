@@ -9,6 +9,9 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ScaleGestureDetector;
+import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener;
+import android.view.MotionEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +29,10 @@ public class CanvasView extends View{
     private PointF mPoint = new PointF(5,5);
     private List<PointF> historyPoints = new ArrayList<PointF>();
 
+    // for scaling
+    private float scaleFactor = 1.f;
+    private ScaleGestureDetector scaleDetector;
+
     public CanvasView(Context c, AttributeSet attrs) {
         super(c, attrs);
         context = c;
@@ -41,6 +48,9 @@ public class CanvasView extends View{
         mPaint.setStrokeJoin(Paint.Join.ROUND);
         mPaint.setStrokeWidth(4f);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
+
+        // 创建ScaleGestureDetector对象
+        scaleDetector = new ScaleGestureDetector(context, new ScaleListener());
     }
 
     // override onSizeChanged
@@ -54,10 +64,23 @@ public class CanvasView extends View{
         mCanvas = new Canvas(mBitmap);
     }
 
+
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        // 让ScaleGestureDetector处理触摸事件
+        scaleDetector.onTouchEvent(ev);
+        return true;
+    }
+
     // override onDraw
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        
+        // 在绘制内容之前，缩放画布
+        canvas.save();
+        canvas.scale(scaleFactor, scaleFactor);
+        
         {
             mPaint.setColor(Color.BLACK);
             mPath.moveTo(0, height/2);
@@ -85,6 +108,9 @@ public class CanvasView extends View{
                 canvas.drawPoint(p.x, p.y, mPaint);
             }
         }
+
+        // 在绘制内容之后，恢复画布
+        canvas.restore();
         
     }
 
@@ -92,17 +118,33 @@ public class CanvasView extends View{
         // mPoint.x = x;
         // mPoint.y = y;
         // 求该点相对于中心点的坐标
-        x = x + width / 2;
-        y = height / 2 - y;
+        x = (x) + width / 2;
+        y = height / 2 - (y);
         historyPoints.add(new PointF(x, y));
-        invalidate();
+        //invalidate();
+        postInvalidate();
     }
 
 
     public void clearCanvas() {
         mPath.reset();
         historyPoints.clear();
-        invalidate();
+        //invalidate();
+        postInvalidate();
+    }
+
+    private class ScaleListener extends SimpleOnScaleGestureListener {
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            scaleFactor *= detector.getScaleFactor();
+
+            // Don't let the object get too small or too large.
+            scaleFactor = Math.max(0.1f, Math.min(scaleFactor, 5.0f));
+
+            // invalidate();
+            postInvalidate();
+            return true;
+        }
     }
 
 

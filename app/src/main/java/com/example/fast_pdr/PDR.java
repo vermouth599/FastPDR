@@ -54,7 +54,7 @@ public class PDR {
     public Matrix V = new Matrix(3,1);
 
     // 误差补偿参数,用于控制陀螺仪补偿的各项误差
-    public double omega = 0.0;
+    public double omega = 13.0;
     public double beta = 2.146/omega;
     public double kp = 2.0 * beta;
     public double ki = beta * beta; 
@@ -70,11 +70,17 @@ public class PDR {
     public int step_index = 0;
 
     // 步长
-    public double step_length_ = 0.0;
+    public double step_length_ = 0.6;
 
     // 位置
     public double X_ = 0.0;
     public double Y_ = 0.0;
+
+    // 位置列表
+    public List<Double> X_list = new ArrayList<Double>();
+    public List<Double> Y_list = new ArrayList<Double>();
+    public List<Double> yaw_list = new ArrayList<Double>();
+    public List<Double> time_List= new ArrayList<Double>();
 
 
     /********************************************************
@@ -124,6 +130,7 @@ public class PDR {
         Phi_ = Phi_ * 180 / Math.PI;//rad2deg
 
         Phi_m = Phi_ + D_CONSTANT;//deg
+        yaw_list.add(Phi_m);
 
         double B = 0, L = 0, H = 0;
 
@@ -156,8 +163,10 @@ public class PDR {
 
         X_ = 0.0;
         Y_ = 0.0;
+        X_list.add(X_);
+        Y_list.add(Y_);
 
-        canvasView.drawPoint((int)X_, (int)Y_);
+        canvasView.drawPoint((float)X_, (float)Y_);
 
        
 
@@ -209,9 +218,11 @@ public class PDR {
     }
 
     // 从main函数中获取数据
-    public void from_main(ArrayList steplist, int last_index, double last_time , Matrix Buff)
+    public void from_main(ArrayList steplist, int last_index, double last_time , Matrix Buff, int buff_count)
     {
-       int i;
+        // Buff - 0 - timestamp - 1 2 3 - accel - 4 5 6 - gyro - 7 8 9 - mag
+
+        int i;
        
        if (initial == true)
        {
@@ -227,11 +238,16 @@ public class PDR {
 
                double[][] e_acc_ = {{Buff.get(i, 2) * V.get(2, 0) - Buff.get(i, 3) * V.get(1, 0)},
                                     {Buff.get(i, 3) * V.get(0, 0) - Buff.get(i, 1) * V.get(2, 0)},
-                                    {Buff.get(i, 1) * V.get(1, 0) - Buff.get(i, 22) * V.get(0, 0)}};
+                                    {Buff.get(i, 1) * V.get(1, 0) - Buff.get(i, 2) * V.get(0, 0)}};
                Matrix e_acc = new Matrix(e_acc_);
                
                // 计算磁力计的修正量
-               double[][] M_2_ = {{Buff.get(i,8)}, {Buff.get(i,9)}, {Buff.get(i,10)}};
+
+               double mag_1 = Buff.get(i, 7)/100; // uT -> Gauss
+               double mag_2 = Buff.get(i, 8)/100; // uT -> Gauss
+               double mag_3 = Buff.get(i, 9)/100; // uT -> Gauss
+
+               double[][] M_2_ = {{mag_1}, {mag_2}, {mag_3}};
                Matrix M_2 = new Matrix(M_2_);
                Matrix mag_dili = C_n_b.transpose().times(M_2);
 
@@ -242,9 +258,9 @@ public class PDR {
 
                Matrix mag_jiti = C_n_b.times(M_3);
 
-               double[][] e_mag_ = {{Buff.get(i,9) * mag_dili.get(2, 0) - Buff.get(i,10) * mag_dili.get(1, 0)},
-                                    {Buff.get(i,10) * mag_dili.get(0, 0) - Buff.get(i,8) * mag_dili.get(2, 0)},
-                                    {Buff.get(i,8) * mag_dili.get(1, 0) - Buff.get(i,9) * mag_dili.get(0, 0)}};
+               double[][] e_mag_ = {{mag_2 * mag_jiti.get(2, 0) - mag_3 * mag_jiti.get(1, 0)},
+                                    {mag_3 * mag_jiti.get(0, 0) - mag_1 * mag_jiti.get(2, 0)},
+                                    {mag_1 * mag_jiti.get(1, 0) - mag_2 * mag_jiti.get(0, 0)}};
                 
                
                Matrix e_mag = new Matrix(e_mag_);
@@ -252,11 +268,14 @@ public class PDR {
 
                
                    
-               dt = Buff.get(i+1, 0) - Buff.get(i, 0);
+               dt = Buff.get(i+1, 0) - Buff.get(i, 0); // ms
+               dt = dt / 1000.0; // s
+
+
                e_int = e_int.plus(e.times(dt));
                
                                    
-               q_now = quaternion_update(q_now, Buff.get(i, 4), Buff.get(i, 5), Buff.get(i, 6), dt);
+              
                
                if (step_index < steplist.size() && Buff.get(i, 0) == ((Double) steplist.get(step_index)).doubleValue())
                {
@@ -264,13 +283,19 @@ public class PDR {
                    location_update(q_now);
                    step_index++;
                }
-               
+               q_now = quaternion_update(q_now, Buff.get(i, 4), Buff.get(i, 5), Buff.get(i, 6), dt);
+               // 获取yaw
+                double[] euler = fromQuaternion(q_now);
+                double yaw = euler[2];//rad
+                yaw = yaw * 180 / Math.PI;//rad2deg
+                yaw_list.add(yaw);
+                time_List.add(Buff.get(i, 0));
            }
               initial = false;
        }
        else
        {
-           for (i = last_index; i < Buff.getRowDimension()-1; i++)
+           for (i = last_index; i < buff_count - 1; i++)
            {    
                 // 更新姿态
                q_last = q_now;
@@ -284,11 +309,15 @@ public class PDR {
 
                double[][] e_acc_ = {{Buff.get(i, 2) * V.get(2, 0) - Buff.get(i, 3) * V.get(1, 0)},
                                     {Buff.get(i, 3) * V.get(0, 0) - Buff.get(i, 1) * V.get(2, 0)},
-                                    {Buff.get(i, 1) * V.get(1, 0) - Buff.get(i, 22) * V.get(0, 0)}};
+                                    {Buff.get(i, 1) * V.get(1, 0) - Buff.get(i, 2) * V.get(0, 0)}};
                Matrix e_acc = new Matrix(e_acc_);
                
                // 计算磁力计的修正量
-               double[][] M_2_ = {{Buff.get(i,8)}, {Buff.get(i,9)}, {Buff.get(i,10)}};
+               double mag_1 = Buff.get(i, 7)/100; // uT -> Gauss
+               double mag_2 = Buff.get(i, 8)/100; // uT -> Gauss
+               double mag_3 = Buff.get(i, 9)/100; // uT -> Gauss
+
+               double[][] M_2_ = {{mag_1}, {mag_2}, {mag_3}};
                Matrix M_2 = new Matrix(M_2_);
                Matrix mag_dili = C_n_b.transpose().times(M_2);
 
@@ -299,18 +328,21 @@ public class PDR {
 
                Matrix mag_jiti = C_n_b.times(M_3);
 
-               double[][] e_mag_ = {{Buff.get(i,9) * mag_dili.get(2, 0) - Buff.get(i,10) * mag_dili.get(1, 0)},
-                                    {Buff.get(i,10) * mag_dili.get(0, 0) - Buff.get(i,8) * mag_dili.get(2, 0)},
-                                    {Buff.get(i,8) * mag_dili.get(1, 0) - Buff.get(i,9) * mag_dili.get(0, 0)}};
+               double[][] e_mag_ = {{mag_2 * mag_jiti.get(2, 0) - mag_3 * mag_jiti.get(1, 0)},
+                                    {mag_3 * mag_jiti.get(0, 0) - mag_1 * mag_jiti.get(2, 0)},
+                                    {mag_1 * mag_jiti.get(1, 0) - mag_2 * mag_jiti.get(0, 0)}};
                 
                Matrix e_mag = new Matrix(e_mag_);              
                e = e_acc.plus(e_mag);
 
-               dt = Buff.get(i+1, 0) - Buff.get(i, 0);
+               dt = Buff.get(i+1, 0) - Buff.get(i, 0); // ms
+               dt = dt / 1000.0; // s
+    
+    
 
                e_int = e_int.plus(e.times(dt));
 
-               q_now = quaternion_update(q_now, Buff.get(i, 4), Buff.get(i, 5), Buff.get(i, 6), dt);
+              
                if (step_index < steplist.size() && Buff.get(i, 0) == ((Double) steplist.get(step_index)).doubleValue())
                {
 
@@ -318,8 +350,16 @@ public class PDR {
                    location_update(q_now);
                    step_index++;
                }
-
+               q_now = quaternion_update(q_now, Buff.get(i, 4), Buff.get(i, 5), Buff.get(i, 6), dt);
+                // 获取yaw
+                 double[] euler = fromQuaternion(q_now);
+                 double yaw = euler[2];//rad
+                 yaw = yaw * 180 / Math.PI;//rad2deg
+                 yaw_list.add(yaw);
+                 time_List.add(Buff.get(i, 0));
            }
+           int a = 0;
+
         }
 
 
@@ -351,13 +391,13 @@ public class PDR {
         double y = q.getQ2();
         double z = q.getQ3();
 
-        double roll = Math.atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y));
+        double roll = Math.atan2(2.0 * (w * x + y * z), 1.0 - 2.0 * (x * x + y * y));
         if(roll < 0)
         {
-            roll = roll + 2 * Math.PI;
+            roll = roll + 2.0 * Math.PI;
         }
-        double pitch = Math.asin(2 * (w * y - z * x));
-        double yaw = Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z));
+        double pitch = Math.asin(2.0 * (w * y - z * x));
+        double yaw = Math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z));
 
         return new double[]{roll, pitch, yaw}; // rad,rad,rad
     }
@@ -369,6 +409,9 @@ public class PDR {
         double yaw = euler[2];//rad
         X_ = X_ + step_length_ * Math.cos(yaw);
         Y_ = Y_ + step_length_ * Math.sin(yaw);
+        X_list.add(X_);
+        Y_list.add(Y_);
+
         canvasView.drawPoint((float)X_, (float)Y_);
       
     }

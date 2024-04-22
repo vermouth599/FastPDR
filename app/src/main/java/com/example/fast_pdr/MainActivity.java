@@ -16,7 +16,9 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.widget.TextView;
-
+import android.widget.EditText;
+import android.text.TextWatcher;
+import android.text.Editable;
 
 
 import com.example.fast_pdr.FileIO;
@@ -76,6 +78,10 @@ public class MainActivity  extends AppCompatActivity {
 
     private TextView StepTextView;
 
+    private EditText threadValueEditText;
+
+    private EditText intervalEditText;
+
     // 创建FileIO对象
     private FileIO fileIO;
 
@@ -97,7 +103,11 @@ public class MainActivity  extends AppCompatActivity {
                 public void run() {
                     try {
                         // 在后台线程中执行耗时的操作
+                        // 注意，需要使用PostInvalidate
                         pdrdata.synchronize();
+                        pdr.from_main(stepDetectorSensor.stepList,pdrdata.last_index,pdrdata.last_time,pdrdata.Buffer,pdrdata.buff_count);
+
+                        
                     } catch (Exception e) {
                         pdrdata.printdata();
                         e.printStackTrace();
@@ -203,6 +213,52 @@ public class MainActivity  extends AppCompatActivity {
         stepDetectorSensor.SensorChangeListener(new StepInfo());
 
         String fileName = "data.txt";
+
+
+        EditText threadValueEditText = (EditText)findViewById(R.id.stepDetectorThreadValue);
+        EditText intervalEditText = (EditText)findViewById(R.id.stepDetectorInterval);
+
+        threadValueEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // This method is called to notify you that, within s, the count characters 
+                // beginning at start are about to be replaced by new text with length after.
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // This method is called to notify you that, within s, the count characters 
+                // beginning at start have just replaced old text that had length before.
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // This method is called to notify you that, somewhere within s, the text has 
+                // been changed.
+                if (!s.toString().isEmpty()) {
+                    float threadValue = Float.parseFloat(s.toString());
+                    stepDetectorSensor.setThreadValue(threadValue);
+                }
+            }
+        });
+
+        intervalEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (!s.toString().isEmpty()) {
+                    float interval = Float.parseFloat(s.toString());
+                    stepDetectorSensor.setInterval(interval);
+                }
+            }
+        });
 
         // 创建传感器事件监听器
         accelerometerEventListener   = new SensorEventListener()
@@ -401,6 +457,11 @@ public class MainActivity  extends AppCompatActivity {
                 // 停止Handler
                 handler.removeCallbacks(runnable);
                 pdrdata.printBuffer();
+                // 把位置信息写入文件
+                for (int i = 0; i < pdr.yaw_list.size(); i++) {
+                    String content = " " +  pdr.yaw_list.get(i) + "\n";
+                    fileIO.writeToFile("location.txt", content);
+                }
                 // pdrdata.printdata();
                 // sensorManager.unregisterListener(stepDetectorListener);
             }
