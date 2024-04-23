@@ -1,6 +1,7 @@
 package com.example.fast_pdr;
 
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.app.AlertDialog;
@@ -21,6 +22,9 @@ import android.text.TextWatcher;
 import android.text.Editable;
 
 
+import com.amap.api.maps.AMap;
+import com.amap.api.maps.MapView;
+import com.amap.api.maps.MapsInitializer;
 import com.example.fast_pdr.FileIO;
 import com.example.fast_pdr.LineChartHelper;
 import com.example.fast_pdr.SensorData;
@@ -40,7 +44,13 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.viewpager2.widget.ViewPager2;
+
 import com.github.mikephil.charting.charts.LineChart;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+
 import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 
@@ -50,12 +60,15 @@ import java.util.concurrent.Executors;
 
 
 
+
 public class MainActivity  extends AppCompatActivity {
 
+    private MapManager mapManager;
     private CanvasView customCanvas;
     private SensorManager sensorManager;
-    
-    
+
+    MapsInitializer mapini;
+    MapView mMapView = null;
     private SensorEventListener accelerometerEventListener;
     private Sensor accelerometerSensor;
     
@@ -105,7 +118,7 @@ public class MainActivity  extends AppCompatActivity {
                         // 在后台线程中执行耗时的操作
                         // 注意，需要使用PostInvalidate
                         pdrdata.synchronize();
-                        pdr.from_main(stepDetectorSensor.stepList,pdrdata.last_index,pdrdata.last_time,pdrdata.Buffer,pdrdata.buff_count);
+                        pdr.from_main(stepDetectorSensor.stepList,stepDetectorSensor.lengthList,pdrdata.last_index,pdrdata.last_time,pdrdata.Buffer,pdrdata.buff_count);
 
                         
                     } catch (Exception e) {
@@ -191,9 +204,17 @@ public class MainActivity  extends AppCompatActivity {
         fileIO = new FileIO(this);
         fileIO.setDirTime();
 
-        pdr = new PDR(customCanvas);
-        // 获取初始位置
 
+
+        mapini.updatePrivacyShow(this,true,true);
+        mapini.updatePrivacyAgree(this,true);
+
+        //获取地图控件引用
+        mapManager = new MapManager(this, R.id.map);
+        //在activity执行onCreate时执行mMapView.onCreate(savedInstanceState)，创建地图
+        mapManager.initializeMap(savedInstanceState);
+
+        pdr = new PDR(customCanvas,mapManager);
 
 
 

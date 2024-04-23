@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/accelerationTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:padding="10dp"
+        android:text="Acceleration Data"
+        android:textColor="#000000"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/gyroTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:padding="10dp"
+        android:text="Gyro Data"
+        android:textColor="#000000"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/magneticTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:padding="10dp"
+        android:text="Magnetic Data"
+        android:textColor="#000000"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/LocationTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:padding="10dp"
+        android:text="GPS_Location"
+        android:textColor="#000000"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/StepTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#FFFFFF"
+        android:padding="10dp"
+        android:text="StepDetector"
+        android:textColor="#000000"
+        android:textSize="18sp" />
+
+    <!-- Other view elements and layout -->
+    <EditText
+        android:id="@+id/stepDetectorThreadValue"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="步态探测ThreadValue"
+        android:inputType="number" />
+
+    <EditText
+        android:id="@+id/stepDetectorInterval"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="步态探测间隔"
+        android:inputType="number" />
+</LinearLayout>

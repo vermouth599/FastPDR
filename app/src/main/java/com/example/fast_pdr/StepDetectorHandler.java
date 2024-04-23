@@ -41,12 +41,15 @@ public class StepDetectorHandler {
     //动态阈值需要动态的数据，这个值用于这些动态数据的阈值
     private final float initialValue = (float) 1.3;
     //初始阈值
-    private float ThreadValue = (float) 8.0;
+    private float ThreadValue = (float) 1.0;
 
     private float interval = (float) 500;
     //private StepDetectorListener mStepListeners;
 
     public ArrayList stepList = new ArrayList();
+    public ArrayList lengthList = new ArrayList();
+
+    public double height = 1.85;
 
     private StepInfo mStepInfo;
     
@@ -136,6 +139,7 @@ public class StepDetectorHandler {
         boolean isEffect = false;
         if (timeOfThisPeak - timeOfLastPeak < 2000) {
             stepList.add(timeOfThisPeak);
+            calculateStepLengths();
             mainActivity.updateTextView("用户在 " + timeOfThisPeak + "走了一步");
             isEffect = stepList.size() >= 3;
         } else {
@@ -179,6 +183,37 @@ public class StepDetectorHandler {
         } else {
             return false;
         }
+    }
+
+    public void calculateStepLengths()
+    {
+        // 获取steplist的size
+
+        int size = stepList.size();
+        if (size == 1)
+        {
+            lengthList.add(0.4);
+        }
+        else if (size == 2)
+        {
+            lengthList.add(0.75);
+        }
+        else
+        {
+            double ll_time = (Double) stepList.get(size - 3);
+            double last_time = (Double) stepList.get(size - 2);
+            double now_time = (Double) stepList.get(size - 1);
+            double frequency = 1.0 / (0.8 * (now_time - last_time) 
+            + 0.2 * (last_time - ll_time));
+
+            double steplength = 0.7 + 0.371 * (height - 1.6) + 0.227 * (frequency - 1.79) * height / 1.6;
+
+            lengthList.add(steplength);
+
+
+        }
+        
+
     }
 
 

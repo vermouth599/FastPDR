@@ -12,6 +12,15 @@
         android:orientation="vertical"
         tools:context=".MainActivity">
 
+        <com.amap.api.maps.MapView
+
+            android:id="@+id/map"
+
+            android:layout_width="match_parent"
+
+            android:layout_height="400dp"/>
+
+
         <TextView
             android:id="@+id/accelerationTextView"
             android:layout_width="match_parent"
@@ -66,14 +75,14 @@
         <EditText
             android:id="@+id/stepDetectorThreadValue"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:hint="步态探测ThreadValue"
             android:inputType="number" />
 
         <EditText
             android:id="@+id/stepDetectorInterval"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:hint="步态探测间隔"
             android:inputType="number" />
 
@@ -126,6 +135,10 @@
             android:layout_height="300dp"
             android:layout_margin="16dp"
             android:background="#ffffff" />
+
+
+
+
 
 
     </LinearLayout>

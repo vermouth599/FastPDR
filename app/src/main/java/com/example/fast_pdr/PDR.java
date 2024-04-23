@@ -9,15 +9,18 @@ import Jama.Matrix;
 import org.apache.commons.math3.complex.Quaternion;
 import org.locationtech.proj4j.*;
 import com.example.fast_pdr.CanvasView;
+import com.example.fast_pdr.MapManager;
 
 public class PDR {
 
+    private MapManager mMapManager;
     // 
     private CanvasView canvasView;
 
-    public PDR(CanvasView canvasView)
+    public PDR(CanvasView canvasView,MapManager mapManager)
     {
         this.canvasView = canvasView;
+        this.mMapManager = mapManager;
     }
     
     // 定义一个常量,武汉地区磁偏角
@@ -33,7 +36,9 @@ public class PDR {
     private double mag_y;
     private double mag_z;
     private long timestamp;
-    private double step_length;
+    
+
+
 
     // 初始变量
     public double initial_r, initial_theta; // 初始水平姿态角
@@ -54,7 +59,7 @@ public class PDR {
     public Matrix V = new Matrix(3,1);
 
     // 误差补偿参数,用于控制陀螺仪补偿的各项误差
-    public double omega = 13.0;
+    public double omega = 1.5;
     public double beta = 2.146/omega;
     public double kp = 2.0 * beta;
     public double ki = beta * beta; 
@@ -166,7 +171,10 @@ public class PDR {
         X_list.add(X_);
         Y_list.add(Y_);
 
+
+
         canvasView.drawPoint((float)X_, (float)Y_);
+        mMapManager.setcentralpoint(initial_B,initial_L);
 
        
 
@@ -218,7 +226,7 @@ public class PDR {
     }
 
     // 从main函数中获取数据
-    public void from_main(ArrayList steplist, int last_index, double last_time , Matrix Buff, int buff_count)
+    public void from_main(ArrayList steplist, ArrayList lengthlist, int last_index, double last_time , Matrix Buff, int buff_count)
     {
         // Buff - 0 - timestamp - 1 2 3 - accel - 4 5 6 - gyro - 7 8 9 - mag
 
@@ -280,6 +288,7 @@ public class PDR {
                if (step_index < steplist.size() && Buff.get(i, 0) == ((Double) steplist.get(step_index)).doubleValue())
                {
                 // 更新
+                   step_length_ = (Double) lengthlist.get(step_index);
                    location_update(q_now);
                    step_index++;
                }
@@ -347,6 +356,7 @@ public class PDR {
                {
 
                 // 更新
+                   step_length_ = (double) lengthlist.get(step_index);
                    location_update(q_now);
                    step_index++;
                }
@@ -407,14 +417,82 @@ public class PDR {
     {   
         double[] euler = fromQuaternion(q_now);
         double yaw = euler[2];//rad
+
+        // 由于安卓的轴与算法的轴不一样，yaw需要取反
+        yaw = -yaw;
         X_ = X_ + step_length_ * Math.cos(yaw);
         Y_ = Y_ + step_length_ * Math.sin(yaw);
-        X_list.add(X_);
-        Y_list.add(Y_);
+        X_list.add(X_); // North - m
+        Y_list.add(Y_); // East - m
 
+        // 转换坐标
+        double[] BL;
+        BL = xyToBL(X_, Y_, initial_B, initial_L);
+        double B_ = BL[0];
+        double L_ = BL[1];
+        mMapManager.moveToPoint(B_,L_);
         canvasView.drawPoint((float)X_, (float)Y_);
       
     }
+
+    /**
+     * This method is used to convert plane coordinates (dX, dY) to geographic coordinates (latitude, longitude).
+     *
+     * @param dX The northward coordinate relative to the origin in the plane coordinate system, in meters.
+     * @param dY The eastward coordinate relative to the origin in the plane coordinate system, in meters.
+     * @param B0 The latitude of the origin, in degrees.
+     * @param L0 The longitude of the origin, in degrees.
+     * @return An array of two doubles. The first element is the latitude (B) and the second element is the longitude (L).
+     */
+
+    public double[] xyToBL(double dX, double dY, double B0, double L0) // m m deg deg
+    {  
+
+        
+        String projString = "+proj=tmerc +lat_0=" + B0 + " +lon_0=" + L0 + " +k=1 +x_0=500000 +y_0=0 +ellps=WGS84 +units=m +no_defs";
+        
+        // Create coordinate reference systems
+        CRSFactory factory = new CRSFactory();
+        CoordinateReferenceSystem srcCRS = factory.createFromName("EPSG:4326");
+        CoordinateReferenceSystem dstCRS = factory.createFromParameters(null, projString);
+    
+        CoordinateTransformFactory ctFactory = new CoordinateTransformFactory();
+        CoordinateTransform transform = ctFactory.createTransform(srcCRS, dstCRS);
+
+        // Define the original coordinates
+        ProjCoordinate srcCoord = new ProjCoordinate(L0, B0);
+
+        ProjCoordinate dstCoord = new ProjCoordinate();
+        transform.transform(srcCoord, dstCoord);
+
+        Log.d("dstCoord", " B: " + dstCoord.x + " L: " + dstCoord.y); // x - 东方向  y - 北方向
+
+        double X_0 = dstCoord.x; //坐标轴原点的东方向值，理应为500000.0
+        double Y_0 = dstCoord.y; //坐标轴原点的北方向值，理应为0.0
+
+        assert (X_0 == 500000.0);
+        assert (Y_0 == 0.0);
+
+        double X = X_0 + dY;
+        double Y = Y_0 + dX;
+
+        // 逆转换
+        ProjCoordinate srcCoord_ = new ProjCoordinate();
+        ProjCoordinate dstCoord_ = new ProjCoordinate(X, Y);
+
+        // Gauss-Kruger projection inverse calculation
+        transform = ctFactory.createTransform(dstCRS, srcCRS);
+
+        transform.transform(dstCoord_, srcCoord_);
+
+        Log.d("srcCoord_", " B: " + srcCoord_.y + " L: " + srcCoord_.x); // x - 经度  y - 纬度
+
+
+        return new double[]{dstCoord.y, dstCoord.x}; // B L
+    
+    }
+    
+
 
   
 
