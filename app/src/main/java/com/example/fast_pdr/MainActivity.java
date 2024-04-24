@@ -16,6 +16,8 @@ import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.widget.ProgressBar;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.EditText;
 import android.text.TextWatcher;
@@ -68,7 +70,7 @@ public class MainActivity  extends AppCompatActivity {
     private SensorManager sensorManager;
 
     MapsInitializer mapini;
-    MapView mMapView = null;
+
     private SensorEventListener accelerometerEventListener;
     private Sensor accelerometerSensor;
     
@@ -94,6 +96,8 @@ public class MainActivity  extends AppCompatActivity {
     private EditText threadValueEditText;
 
     private EditText intervalEditText;
+
+    private EditText omegaEditText;
 
     // 创建FileIO对象
     private FileIO fileIO;
@@ -177,6 +181,8 @@ public class MainActivity  extends AppCompatActivity {
         Button startButton = findViewById(R.id.startButton); // 获取开始按钮的引用
         Button stopButton = findViewById(R.id.stopButton); // 获取停止按钮的引用
         Button initializeButton = findViewById(R.id.initializeButton);
+        Button clearButton = findViewById(R.id.clearButton);
+        Button TDRButton = findViewById(R.id.TDRbutton);
 
         LineChart Accel_chart = (LineChart) findViewById(R.id.accel_chart);
         LineChartHelper charthelper = new LineChartHelper(Accel_chart);
@@ -190,8 +196,11 @@ public class MainActivity  extends AppCompatActivity {
         LineChartHelper charthelper3 = new LineChartHelper(Mag_chart);
         charthelper3.settitle("磁场传感器数据");
 
-        customCanvas = (CanvasView) findViewById(R.id.Canvas);
-        customCanvas.drawPoint(5, 5);
+        CanvasView myCanvasView = (CanvasView) findViewById(R.id.canvas_view);
+        
+
+
+
 
         // 检查外部存储是否可用
         // 检查是否已经有了写入外部存储的权限
@@ -214,10 +223,20 @@ public class MainActivity  extends AppCompatActivity {
         //在activity执行onCreate时执行mMapView.onCreate(savedInstanceState)，创建地图
         mapManager.initializeMap(savedInstanceState);
 
-        pdr = new PDR(customCanvas,mapManager);
+        pdr = new PDR(myCanvasView,mapManager);
 
-
-
+        RadioGroup radioGroup = (RadioGroup) findViewById(R.id.radioGroup);
+        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if(checkedId == R.id.radioButton1) {
+                    pdr.inside = 1;
+                } else if(checkedId == R.id.radioButton2) {
+                    pdr.inside = 0;
+                } 
+            }
+        });
+        ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar);
         
         // 获取传感器管理器
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -236,25 +255,26 @@ public class MainActivity  extends AppCompatActivity {
         String fileName = "data.txt";
 
 
-        EditText threadValueEditText = (EditText)findViewById(R.id.stepDetectorThreadValue);
-        EditText intervalEditText = (EditText)findViewById(R.id.stepDetectorInterval);
+        threadValueEditText = (EditText)findViewById(R.id.stepDetectorThreadValue);
+        intervalEditText = (EditText)findViewById(R.id.stepDetectorInterval);
+        omegaEditText = (EditText)findViewById(R.id.omega_);
 
         threadValueEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                // This method is called to notify you that, within s, the count characters 
+                // This method is called to notify you that, within s, the count characters
                 // beginning at start are about to be replaced by new text with length after.
             }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // This method is called to notify you that, within s, the count characters 
+                // This method is called to notify you that, within s, the count characters
                 // beginning at start have just replaced old text that had length before.
             }
 
             @Override
             public void afterTextChanged(Editable s) {
-                // This method is called to notify you that, somewhere within s, the text has 
+                // This method is called to notify you that, somewhere within s, the text has
                 // been changed.
                 if (!s.toString().isEmpty()) {
                     float threadValue = Float.parseFloat(s.toString());
@@ -280,6 +300,26 @@ public class MainActivity  extends AppCompatActivity {
                 }
             }
         });
+
+        omegaEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (!s.toString().isEmpty()) {
+                    float omega = Float.parseFloat(s.toString());
+                    pdr.omega = (double) omega;
+                }
+            }
+        });
+
+        
 
         // 创建传感器事件监听器
         accelerometerEventListener   = new SensorEventListener()
@@ -438,12 +478,21 @@ public class MainActivity  extends AppCompatActivity {
                
 
                
-               // 获取位置信息
-               double latitude = location.getLatitude();
-               double longitude = location.getLongitude();
-               double altitude = location.getAltitude();
+               if (location != null) {
+                double latitude = location.getLatitude();
+                double longitude = location.getLongitude();
+                double altitude = location.hasAltitude() ? location.getAltitude() : Double.NaN;
+            
+                // Check if the values are valid
+                if (latitude != 0.0 && longitude != 0.0 && !Double.isNaN(altitude)) {
+                    pdrdata.addLocationData(timestamp, latitude, longitude, altitude);
+                }
+                }
 
-               pdrdata.addLocationData(timestamp, latitude, longitude, altitude);
+               // 检查三个值是否为空
+
+
+              
 
                
                 
@@ -479,12 +528,61 @@ public class MainActivity  extends AppCompatActivity {
                 handler.removeCallbacks(runnable);
                 pdrdata.printBuffer();
                 // 把位置信息写入文件
-                for (int i = 0; i < pdr.yaw_list.size(); i++) {
-                    String content = " " +  pdr.yaw_list.get(i) + "\n";
+                for (int i = 0; i < pdr.X_list.size(); i++) {
+                    String content = " " +  pdr.X_list.get(i) + " " + pdr.Y_list.get(i) + " " +  "\n";
                     fileIO.writeToFile("location.txt", content);
                 }
+                // 把步长信息写入文件
+                for (int i = 0; i < stepDetectorSensor.lengthList.size(); i++) {
+                    String content = " " +  stepDetectorSensor.lengthList.get(i) + "\n";
+                    fileIO.writeToFile("step_length.txt", content);
+                }
+                // 把yaw角信息写入文件
+                for (int i = 0; i < pdr.yaw_list.size(); i++) {
+                    String content = " " +  pdr.yaw_list.get(i) + "\n";
+                    fileIO.writeToFile("yaw.txt", content);
+                }  
+                // 把步的时间信息写入文件
+                for (int i = 0; i < stepDetectorSensor.stepList.size(); i++) {
+                    String content = " " +  stepDetectorSensor.stepList.get(i) + "\n";
+                    fileIO.writeToFile("step_time.txt", content);
+                }
+                // 把buff的时间信息写入文件
+                for (int i = 0; i < pdr.time_List.size(); i++)
+                {
+                    String content = " " +  pdr.time_List.get(i) + "\n";
+                    fileIO.writeToFile("buff_time.txt", content);
+                }
+                // 清理图
+//                charthelper_XY.clearChart();
+//                charthelper.clearChart();
+//                charthelper2.clearChart();
+//                charthelper3.clearChart();
                 // pdrdata.printdata();
                 // sensorManager.unregisterListener(stepDetectorListener);
+            }
+        });
+
+        clearButton.setOnClickListener(new View.OnClickListener() 
+        {
+            public void onClick(View v) {
+                pdrdata.clear();
+                pdr.clear();
+                charthelper.clearChart();
+                charthelper2.clearChart();
+                charthelper3.clearChart();
+                myCanvasView.clearCanvas();
+                mapManager.clearMap();
+
+            }
+        });
+
+        TDRButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                double TDR = pdr.TDR(stepDetectorSensor.lengthList);
+                // 输出百分比
+                String TDRText = "TDR: " + TDR/100 + "%";
+                LocationTextView.setText(TDRText);
             }
         });
 
@@ -499,6 +597,25 @@ public class MainActivity  extends AppCompatActivity {
                                 startTime = 0;
                                 mode = 1;
 
+                                // 更新进度条，5秒后注销监听器，进度条到100%
+                                progressBar.setProgress(0);
+                                progressBar.setMax(5000);
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        for (int i = 0; i < 5000; i++) {
+                                            try {
+                                                Thread.sleep(1);
+                                                progressBar.setProgress(i);
+                                            } catch (InterruptedException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    }
+                                }).start();
+
+
+
                                 // 首先注册GPS位置监听器
                                 // 检查是否有访问位置信息的权限
                                 if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -508,9 +625,9 @@ public class MainActivity  extends AppCompatActivity {
                                     // 如果有权限，请求位置更新
                                     locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
                                 }
-                                sensorManager.registerListener(accelerometerEventListener, accelerometerSensor,SensorManager.SENSOR_DELAY_GAME);
-                                sensorManager.registerListener(gyroscopeEventListener, gyroscopeSensor, SensorManager.SENSOR_DELAY_GAME);
-                                sensorManager.registerListener(magneticFieldEventListener, magneticFieldSensor, SensorManager.SENSOR_DELAY_GAME);
+                                sensorManager.registerListener(accelerometerEventListener, accelerometerSensor,20000);
+                                sensorManager.registerListener(gyroscopeEventListener, gyroscopeSensor, 20000);
+                                sensorManager.registerListener(magneticFieldEventListener, magneticFieldSensor, 20000);
                                 
                             
                                 // 创建一个Handler来延迟执行代码

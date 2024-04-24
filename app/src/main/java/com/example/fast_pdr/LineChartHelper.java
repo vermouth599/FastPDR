@@ -12,6 +12,7 @@ public class LineChartHelper {
     
     private LineChart chart;
 
+
     public LineChartHelper(LineChart chart) {
         this.chart = chart;
         initChart();
@@ -26,6 +27,7 @@ public class LineChartHelper {
     
 
     private void initChart() {
+        
         
         chart.setTouchEnabled(true);
         chart.setDragEnabled(true);
@@ -97,6 +99,38 @@ public class LineChartHelper {
 
     
     }
+
+    // X 为北向坐标，Y 为东向坐标
+    public void drawCoords(double x, double y)
+    {   LineData data = chart.getData();
+
+        if (data == null) {
+            // No data, create it
+            data = new LineData();
+            chart.setData(data);
+        }
+    
+        LineDataSet set = (LineDataSet) data.getDataSetByIndex(0);
+    
+        if (set == null) {
+            // No set, create it
+            set = createSet("Label", Color.RED);
+            data.addDataSet(set);
+        }
+    
+        // Add a new entry (point) to the set
+        data.addEntry(new Entry((float) y, (float) x), 0); // Note: y is x-coordinate, x is y-coordinate
+    
+        data.notifyDataChanged();
+        chart.notifyDataSetChanged();
+        chart.postInvalidate();// refresh
+
+//        // Move view to the last added point
+//        chart.moveViewTo(data.getEntryCount(), (float) x, YAxis.AxisDependency.LEFT);
+        
+
+    }
+        
 
     private LineDataSet createSet(String label, int color) {
         LineDataSet set = new LineDataSet(null, label);

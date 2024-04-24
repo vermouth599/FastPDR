@@ -49,8 +49,12 @@ public class CanvasView extends View{
         mPaint.setStrokeWidth(4f);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
 
+        // 放大画布
+//        scaleFactor = 2.0f;
+
         // 创建ScaleGestureDetector对象
         scaleDetector = new ScaleGestureDetector(context, new ScaleListener());
+        
     }
 
     // override onSizeChanged
@@ -82,17 +86,17 @@ public class CanvasView extends View{
         canvas.scale(scaleFactor, scaleFactor);
         
         {
-            mPaint.setColor(Color.BLACK);
-            mPath.moveTo(0, height/2);
-            mPath.lineTo(width,height/2);
-            mPath.moveTo(width/2, 0);
-            mPath.lineTo(width/2, height);
-            mPath.moveTo(width/2 + 50, height/2);
-            mPath.lineTo(width/2 + 50, height/2 - 4);
-            // draw the mPath with the mPaint on the canvas when onDraw
-            canvas.drawPath(mPath, mPaint);
-            mPaint.setStrokeWidth(1f);
-            canvas.drawText("5m", width/2 + 45, height/2 + 14, mPaint);
+            // mPaint.setColor(Color.BLACK);
+            // mPath.moveTo(0, height/2);
+            // mPath.lineTo(width,height/2);
+            // mPath.moveTo(width/2, 0);
+            // mPath.lineTo(width/2, height);
+            // mPath.moveTo(width/2 + 50, height/2);
+            // mPath.lineTo(width/2 + 50, height/2 - 4);
+            // // draw the mPath with the mPaint on the canvas when onDraw
+            // canvas.drawPath(mPath, mPaint);
+            // mPaint.setStrokeWidth(1f);
+            // canvas.drawText("5m", width/2 + 45, height/2 + 14, mPaint);
             mPaint.setStrokeWidth(10);
 
             float centerX = width / 2f;
@@ -101,6 +105,11 @@ public class CanvasView extends View{
             initialized = true;
             mPaint.setColor(Color.RED);
             canvas.drawPoint(centerX, centerY, mPaint);
+
+            if (!historyPoints.isEmpty()) {
+                PointF latestPoint = historyPoints.get(historyPoints.size() - 1);
+                canvas.translate(getWidth() / 2 - latestPoint.x, getHeight() / 2 - latestPoint.y);
+            }
             
             // set color to green then
             mPaint.setColor(Color.GREEN);
@@ -118,8 +127,8 @@ public class CanvasView extends View{
         // mPoint.x = x;
         // mPoint.y = y;
         // 求该点相对于中心点的坐标
-        x = (x) + width / 2;
-        y = height / 2 - (y);
+        x = (25*x) + width / 2;
+        y = height / 2 - (25*y);
         historyPoints.add(new PointF(x, y));
         //invalidate();
         postInvalidate();

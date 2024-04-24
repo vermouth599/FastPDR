@@ -8,6 +8,7 @@ import Jama.Matrix;
 import android.util.Log;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Iterator;
 
 
 public class Datalist {
@@ -117,8 +118,7 @@ public class Datalist {
     // 去除accel_DataList中超出范围的数据
     public void cleanAccelData()
     {
-        // 获取accel_DataList中的第一个数据的时间戳
-        double first_timestamp = accel_DataList.get(0).getTimestamp();
+        
         // 获取accel_DataList中的最后一个数据的时间戳
         double last_timestamp = accel_DataList.get(accel_DataList.size() - 1).getTimestamp();
         // 获取mag_DataList中的第一个数据的时间戳
@@ -130,12 +130,19 @@ public class Datalist {
         // 获取gyro_DataList中的最后一个数据的时间戳
         double gyro_last_timestamp = gyro_DataList.get(gyro_DataList.size() - 1).getTimestamp();
 
-        // 如果accel_DataList中的第一个数据的时间戳小于mag_DataList中的第一个数据的时间戳
-        if(first_timestamp < mag_first_timestamp|| first_timestamp < gyro_first_timestamp)
-        {
-            // 删除accel_DataList中的第一个数据
-            accel_DataList.remove(0);
+        Iterator<SensorData> iterator = accel_DataList.iterator();
+        
+        // 循环，检查所有小于mag_DataList中第一个数据的时间戳的数据
+        while (iterator.hasNext()) {
+            SensorData data = iterator.next();
+            if (data.getTimestamp() < mag_first_timestamp || data.getTimestamp() < gyro_first_timestamp) {
+                iterator.remove();
+            }
         }
+
+
+        
+        
         // // 如果accel_DataList中的最后一个数据的时间戳大于mag_DataList中的最后一个数据的时间戳
         // if(last_timestamp > mag_last_timestamp || last_timestamp > gyro_last_timestamp)
         // {
@@ -160,7 +167,19 @@ public class Datalist {
 
         return list.size();
     }
-
+    public void clear()
+    {
+        accel_DataList.clear();
+        mag_DataList.clear();
+        gyro_DataList.clear();
+        Location_DataList.clear();
+        Buffer = new Matrix(100, 10);
+        accel_array = new Matrix(40, 4);
+        mag_array = new Matrix(40, 4);
+        gyro_array = new Matrix(40, 4);
+        location_array = new Matrix(40, 4);
+        initial = true;
+    }
     /********************************************************************************************
      * This method synchronizes the accelerometer, magnetometer, and gyroscope data.
      * Author : lzy

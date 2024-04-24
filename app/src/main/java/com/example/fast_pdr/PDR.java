@@ -2,6 +2,9 @@ package com.example.fast_pdr;
 import java.util.ArrayList;
 import java.util.List;
 import com.example.fast_pdr.SensorData;
+
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import java.lang.Math;
 import java.lang.reflect.Array;
@@ -13,9 +16,14 @@ import com.example.fast_pdr.MapManager;
 
 public class PDR {
 
+    // Create a Handler for the main thread
+    private Handler mainHandler = new Handler(Looper.getMainLooper());
+
     private MapManager mMapManager;
     // 
     private CanvasView canvasView;
+
+    private LineChartHelper mLineChart;
 
     public PDR(CanvasView canvasView,MapManager mapManager)
     {
@@ -42,7 +50,7 @@ public class PDR {
 
     // 初始变量
     public double initial_r, initial_theta; // 初始水平姿态角
-    public double initial_B, initial_L, initial_H; // 初始位置
+    public double initial_B = 0.0, initial_L = 0.0, initial_H = 0.0; // 初始位置
     public double Phi_m; // 真北方角度 deg
 
     // dt
@@ -86,6 +94,23 @@ public class PDR {
     public List<Double> Y_list = new ArrayList<Double>();
     public List<Double> yaw_list = new ArrayList<Double>();
     public List<Double> time_List= new ArrayList<Double>();
+
+    // 控制
+    public int inside = 0;
+
+    public void clear()
+    {
+        X_list.clear();
+        Y_list.clear();
+        yaw_list.clear();
+        time_List.clear();
+        step_index = 0;
+        X_ = 0.0;
+        Y_ = 0.0;
+        q_now = new Quaternion(1, 0, 0, 0);
+        q_last = new Quaternion(1, 0, 0, 0);
+        initial = true;
+    }
 
 
     /********************************************************
@@ -139,21 +164,27 @@ public class PDR {
 
         double B = 0, L = 0, H = 0;
 
-        // 位置取平均值
-        for (int i = 0; i < Location_DataList.size(); i++)
+        if (Location_DataList.size() != 0)
         {
-            B += Location_DataList.get(i).getX();
-            L += Location_DataList.get(i).getY();
-            H += Location_DataList.get(i).getZ();
+            
+        
+        
+            // 位置取平均值
+            for (int i = 0; i < Location_DataList.size(); i++)
+            {
+                B += Location_DataList.get(i).getX();
+                L += Location_DataList.get(i).getY();
+                H += Location_DataList.get(i).getZ();
+            }
+
+            B /= Location_DataList.size();
+            L /= Location_DataList.size();
+            H /= Location_DataList.size();
+
+            initial_B = B;
+            initial_L = L;
+            initial_H = H;
         }
-
-        B /= Location_DataList.size();
-        L /= Location_DataList.size();
-        H /= Location_DataList.size();
-
-        initial_B = B;
-        initial_L = L;
-        initial_H = H;
 
         Phi_m = Phi_m * Math.PI / 180; //deg to rad
         
@@ -173,8 +204,11 @@ public class PDR {
 
 
 
-        canvasView.drawPoint((float)X_, (float)Y_);
-        mMapManager.setcentralpoint(initial_B,initial_L);
+        canvasView.drawPoint((float)X_,(float)Y_);
+        if (inside == 1) {
+            mMapManager.setcentralpoint(initial_B, initial_L);//TODO:改成INITIAL_BL，仅为测试用
+//            mMapManager.testMoveToPoint();
+        }
 
        
 
@@ -272,14 +306,25 @@ public class PDR {
                 
                
                Matrix e_mag = new Matrix(e_mag_);
+               
+               
+               if (inside == 0)
+               {
+                e = e_acc;
+               }
+               else
+               {
+               
                e = e_acc.plus(e_mag);
+               }
+               
 
                
                    
                dt = Buff.get(i+1, 0) - Buff.get(i, 0); // ms
                dt = dt / 1000.0; // s
 
-
+                
                e_int = e_int.plus(e.times(dt));
                
                                    
@@ -291,6 +336,7 @@ public class PDR {
                    step_length_ = (Double) lengthlist.get(step_index);
                    location_update(q_now);
                    step_index++;
+                   Log.d("位置更新", String.valueOf(Buff.get(i, 0)));
                }
                q_now = quaternion_update(q_now, Buff.get(i, 4), Buff.get(i, 5), Buff.get(i, 6), dt);
                // 获取yaw
@@ -342,7 +388,17 @@ public class PDR {
                                     {mag_1 * mag_jiti.get(1, 0) - mag_2 * mag_jiti.get(0, 0)}};
                 
                Matrix e_mag = new Matrix(e_mag_);              
+
+               if (inside == 0)
+               {
+                e = e_acc;
+               }
+               else
+               {
+               
                e = e_acc.plus(e_mag);
+               }
+            
 
                dt = Buff.get(i+1, 0) - Buff.get(i, 0); // ms
                dt = dt / 1000.0; // s
@@ -359,6 +415,7 @@ public class PDR {
                    step_length_ = (double) lengthlist.get(step_index);
                    location_update(q_now);
                    step_index++;
+                   Log.d("位置更新", String.valueOf(Buff.get(i, 0)));
                }
                q_now = quaternion_update(q_now, Buff.get(i, 4), Buff.get(i, 5), Buff.get(i, 6), dt);
                 // 获取yaw
@@ -420,18 +477,39 @@ public class PDR {
 
         // 由于安卓的轴与算法的轴不一样，yaw需要取反
         yaw = -yaw;
-        X_ = X_ + step_length_ * Math.cos(yaw);
-        Y_ = Y_ + step_length_ * Math.sin(yaw);
+         X_ = X_ + step_length_ * Math.cos(yaw);
+         Y_ = Y_ + step_length_ * Math.sin(yaw);
+//        X_ = X_ + 0.6 * Math.cos(yaw);
+//        Y_ = Y_ + 0.6 * Math.sin(yaw);
+        canvasView.drawPoint((float)X_,(float)Y_);
         X_list.add(X_); // North - m
         Y_list.add(Y_); // East - m
 
-        // 转换坐标
-        double[] BL;
-        BL = xyToBL(X_, Y_, initial_B, initial_L);
-        double B_ = BL[0];
-        double L_ = BL[1];
-        mMapManager.moveToPoint(B_,L_);
-        canvasView.drawPoint((float)X_, (float)Y_);
+        double B_ = 0.0;
+        double L_ = 0.0;
+        if (inside == 1) {
+            // 转换坐标
+            double[] BL;
+            BL = xyToBL(X_, Y_, initial_B, initial_L);
+             B_ = BL[0];
+             L_ = BL[1];
+        }
+
+        // Create new final variables
+        final double finalB_ = B_;
+        final double finalL_ = L_;
+
+        if (inside == 1) {
+            // Use the Handler to move to point on the main thread
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+
+                    mMapManager.moveToPoint(finalB_, finalL_); //TODO:验证这里是不是对的
+                }
+            });
+        }
+
       
     }
 
@@ -490,6 +568,27 @@ public class PDR {
 
         return new double[]{dstCoord.y, dstCoord.x}; // B L
     
+    }
+
+    // 计算TDR
+    public double TDR(ArrayList Length_list)
+    {
+        // 计算总长度
+        double total_length = 0.0;
+        for (int i = 0; i < Length_list.size(); i++)
+        {
+            total_length += (double) Length_list.get(i);
+        }
+        // 计算闭合差
+        double a = X_list.get(0);
+        double b = Y_list.get(0);
+        double c = X_list.get(X_list.size() - 1);
+        double d = Y_list.get(Y_list.size() - 1);
+
+        double close_error = Math.sqrt((a - c) * (a - c) + (b - d) * (b - d));
+
+        return close_error / total_length;
+
     }
     
 

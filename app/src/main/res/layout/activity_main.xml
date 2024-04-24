@@ -12,136 +12,290 @@
         android:orientation="vertical"
         tools:context=".MainActivity">
 
-        <com.amap.api.maps.MapView
-
-            android:id="@+id/map"
-
+        <LinearLayout
             android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/mapTextView"
+                android:layout_width="match_parent"
+                android:layout_height="67dp"
+                android:background="#80D8FF"
+                android:gravity="center"
+                android:padding="10dp"
+                android:text="轨迹显示"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                android:textColor="#2962FF"
+                android:textSize="24sp" />
 
-            android:layout_height="400dp"/>
+            <com.amap.api.maps.MapView
+
+                android:id="@+id/map"
+
+                android:layout_width="match_parent"
+
+                android:layout_height="400dp">
+
+            </com.amap.api.maps.MapView>
+
+            <com.example.fast_pdr.CanvasView
+                android:id="@+id/canvas_view"
+                android:layout_width="match_parent"
+                android:layout_height="600dp" />
 
 
-        <TextView
-            android:id="@+id/accelerationTextView"
+        </LinearLayout>
+
+
+
+
+
+
+
+
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#FFFFFF"
-            android:padding="10dp"
-            android:text="Acceleration Data"
-            android:textColor="#000000"
-            android:textSize="18sp" />
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/gyroTextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#FFFFFF"
-            android:padding="10dp"
-            android:text="Gyro Data"
-            android:textColor="#000000"
-            android:textSize="18sp" />
 
-        <TextView
-            android:id="@+id/magneticTextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#FFFFFF"
-            android:padding="10dp"
-            android:text="Magnetic Data"
-            android:textColor="#000000"
-            android:textSize="18sp" />
+            <TextView
+                android:id="@+id/accelerationTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#FFFFFF"
+                android:padding="10dp"
+                android:text="Acceleration Data"
+                android:textColor="#000000"
+                android:textSize="18sp" />
 
-        <TextView
-            android:id="@+id/LocationTextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#FFFFFF"
-            android:padding="10dp"
-            android:text="GPS_Location"
-            android:textColor="#000000"
-            android:textSize="18sp" />
+            <TextView
+                android:id="@+id/gyroTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#FFFFFF"
+                android:padding="10dp"
+                android:text="Gyro Data"
+                android:textColor="#000000"
+                android:textSize="18sp" />
 
-        <TextView
-            android:id="@+id/StepTextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#FFFFFF"
-            android:padding="10dp"
-            android:text="StepDetector"
-            android:textColor="#000000"
-            android:textSize="18sp" />
+            <TextView
+                android:id="@+id/magneticTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#FFFFFF"
+                android:padding="10dp"
+                android:text="Magnetic Data"
+                android:textColor="#000000"
+                android:textSize="18sp" />
 
-        <!-- Other view elements and layout -->
-        <EditText
-            android:id="@+id/stepDetectorThreadValue"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:hint="步态探测ThreadValue"
-            android:inputType="number" />
+            <TextView
+                android:id="@+id/LocationTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#FFFFFF"
+                android:padding="10dp"
+                android:text="GPS_Location"
+                android:textColor="#000000"
+                android:textSize="18sp" />
 
-        <EditText
-            android:id="@+id/stepDetectorInterval"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:hint="步态探测间隔"
-            android:inputType="number" />
+            <TextView
+                android:id="@+id/StepTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#FFFFFF"
+                android:padding="10dp"
+                android:text="StepDetector"
+                android:textColor="#000000"
+                android:textSize="18sp" />
 
-        <Button
-            android:id="@+id/initializeButton"
-            style="@style/Widget.AppCompat.Button"
-            android:layout_width="match_parent"
-            android:layout_height="90dp"
-            android:text="Initialize"
-            android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+            <!-- Other view elements and layout -->
 
-        <Button
-            android:id="@+id/startButton"
-            style="@style/Widget.AppCompat.Button"
-            android:layout_width="match_parent"
-            android:layout_height="90dp"
-            android:text="Start"
-            android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+            <RadioGroup
+                android:id="@+id/radioGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-        <Button
-            android:id="@+id/stopButton"
-            style="@style/Widget.AppCompat.Button"
-            android:layout_width="match_parent"
-            android:layout_height="90dp"
-            android:text="Stop"
-            android:textAppearance="@style/TextAppearance.AppCompat.Display1"
-            app:rippleColor="#FF80AB" />
-        <com.example.fast_pdr.CanvasView
-            android:id="@+id/Canvas"
-            android:layout_width="match_parent"
-            android:layout_height="300dp" />
-
-        <com.github.mikephil.charting.charts.LineChart
-            android:id="@+id/accel_chart"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_margin="16dp"
-            android:background="#ffffff" />
-
-        <com.github.mikephil.charting.charts.LineChart
-            android:id="@+id/gyro_chart"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_margin="16dp"
-            android:background="#ffffff" />
-
-        <com.github.mikephil.charting.charts.LineChart
-            android:id="@+id/mag_chart"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_margin="16dp"
-            android:background="#ffffff" />
+                <TextView
+                    android:id="@+id/SettingText"
+                    android:layout_width="match_parent"
+                    android:layout_height="67dp"
+                    android:background="#80D8FF"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:text="参数设置"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                    android:textColor="#2962FF"
+                    android:textSize="24sp" />
 
 
 
+                <RadioButton
+                    android:id="@+id/radioButton1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="室外 ———— 九轴滤波" />
+
+                <RadioButton
+                    android:id="@+id/radioButton2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="室内 ———— 六轴滤波" />
+
+            </RadioGroup>
+
+            <EditText
+                android:id="@+id/stepDetectorThreadValue"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="步态探测ThreadValue - 默认为1.0"
+                android:inputType="number" />
+
+            <EditText
+                android:id="@+id/stepDetectorInterval"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="步态探测间隔 - 默认为500"
+                android:inputType="number" />
+
+            <EditText
+                android:id="@+id/omega_"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="补偿常数OMEGA - 默认为1.5"
+                android:inputType="number" />
+
+            <View
+                android:id="@+id/divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#0000FF" />
 
 
 
+
+            <TextView
+                android:id="@+id/Control"
+                android:layout_width="match_parent"
+                android:layout_height="67dp"
+                android:background="#80D8FF"
+                android:gravity="center"
+                android:padding="10dp"
+                android:text="控制"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                android:textColor="#2962FF"
+                android:textSize="24sp" />
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:indeterminate="false" />
+
+            <Button
+                android:id="@+id/initializeButton"
+                style="@style/Widget.AppCompat.Button"
+                android:layout_width="match_parent"
+                android:layout_height="90dp"
+                android:text="Initialize"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+
+
+            <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+
+
+
+
+
+                <TableRow>
+
+                    <Button
+                        android:id="@+id/startButton"
+                        style="@style/Widget.AppCompat.Button"
+                        android:layout_width="203dp"
+                        android:layout_height="90dp"
+                        android:text="Start"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+
+                    <Button
+                        android:id="@+id/stopButton"
+                        style="@style/Widget.AppCompat.Button"
+                        android:layout_width="203dp"
+                        android:layout_height="90dp"
+                        android:text="Stop"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                        app:rippleColor="#FF80AB" />
+
+                </TableRow>
+
+            </TableLayout>
+
+            <Button
+                android:id="@+id/clearButton"
+                style="@style/Widget.AppCompat.Button"
+                android:layout_width="match_parent"
+                android:layout_height="90dp"
+                android:text="Clear"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+
+            <Button
+                android:id="@+id/TDRbutton"
+                style="@style/Widget.AppCompat.Button"
+                android:layout_width="match_parent"
+                android:layout_height="90dp"
+                android:text="Calculate TDR"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+
+<!--            <com.example.fast_pdr.CanvasView-->
+<!--                android:id="@+id/Canvas"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="300dp" />-->
+            <TextView
+                android:id="@+id/Statics"
+                android:layout_width="match_parent"
+                android:layout_height="67dp"
+                android:background="#80D8FF"
+                android:gravity="center"
+                android:padding="10dp"
+                android:text="数据"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                android:textColor="#2962FF"
+                android:textSize="24sp" />
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/accel_chart"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:layout_margin="16dp"
+                android:background="#ffffff" />
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/gyro_chart"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:layout_margin="16dp"
+                android:background="#ffffff" />
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/mag_chart"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:layout_margin="16dp"
+                android:background="#ffffff" />
+
+            <com.google.android.material.bottomnavigation.BottomNavigationView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+
+        </LinearLayout>
     </LinearLayout>
+
+
 
 </ScrollView>
 
