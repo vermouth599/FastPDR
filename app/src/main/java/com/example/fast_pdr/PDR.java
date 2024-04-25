@@ -96,7 +96,8 @@ public class PDR {
     public List<Double> time_List= new ArrayList<Double>();
 
     // 控制
-    public int inside = 0;
+    public boolean usemap = false;
+    public boolean fliter_6 = false;
 
     public void clear()
     {
@@ -205,7 +206,7 @@ public class PDR {
 
 
         canvasView.drawPoint((float)X_,(float)Y_);
-        if (inside == 1) {
+        if (usemap == true) {
             mMapManager.setcentralpoint(initial_B, initial_L);//TODO:改成INITIAL_BL，仅为测试用
 //            mMapManager.testMoveToPoint();
         }
@@ -308,7 +309,7 @@ public class PDR {
                Matrix e_mag = new Matrix(e_mag_);
                
                
-               if (inside == 0)
+               if (fliter_6 == true)
                {
                 e = e_acc;
                }
@@ -389,7 +390,7 @@ public class PDR {
                 
                Matrix e_mag = new Matrix(e_mag_);              
 
-               if (inside == 0)
+               if (fliter_6 == true)
                {
                 e = e_acc;
                }
@@ -487,19 +488,22 @@ public class PDR {
 
         double B_ = 0.0;
         double L_ = 0.0;
-        if (inside == 1) {
+        if (usemap == true) {
             // 转换坐标
             double[] BL;
             BL = xyToBL(X_, Y_, initial_B, initial_L);
-             B_ = BL[0];
-             L_ = BL[1];
+             B_ =  BL[0];
+             L_ =  BL[1];
+             Log.d("B_", String.valueOf(B_));
+             Log.d("L_", String.valueOf(L_));
+             
         }
 
         // Create new final variables
         final double finalB_ = B_;
         final double finalL_ = L_;
 
-        if (inside == 1) {
+        if (usemap == true) {
             // Use the Handler to move to point on the main thread
             mainHandler.post(new Runnable() {
                 @Override
@@ -551,12 +555,12 @@ public class PDR {
         assert (X_0 == 500000.0);
         assert (Y_0 == 0.0);
 
-        double X = X_0 + dY;
-        double Y = Y_0 + dX;
+        double X = X_0 + dX;
+        double Y = Y_0 + dY;
 
         // 逆转换
-        ProjCoordinate srcCoord_ = new ProjCoordinate();
-        ProjCoordinate dstCoord_ = new ProjCoordinate(X, Y);
+        ProjCoordinate srcCoord_ = new ProjCoordinate();//地理坐标系
+        ProjCoordinate dstCoord_ = new ProjCoordinate(X, Y);//高斯坐标系
 
         // Gauss-Kruger projection inverse calculation
         transform = ctFactory.createTransform(dstCRS, srcCRS);
@@ -566,7 +570,7 @@ public class PDR {
         Log.d("srcCoord_", " B: " + srcCoord_.y + " L: " + srcCoord_.x); // x - 经度  y - 纬度
 
 
-        return new double[]{dstCoord.y, dstCoord.x}; // B L
+        return new double[]{srcCoord_.y,  srcCoord_.x}; // B L
     
     }
 

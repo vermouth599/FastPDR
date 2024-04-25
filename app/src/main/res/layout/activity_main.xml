@@ -112,38 +112,30 @@
 
             <!-- Other view elements and layout -->
 
-            <RadioGroup
-                android:id="@+id/radioGroup"
+            <TextView
+                android:id="@+id/SettingText"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:id="@+id/SettingText"
-                    android:layout_width="match_parent"
-                    android:layout_height="67dp"
-                    android:background="#80D8FF"
-                    android:gravity="center"
-                    android:padding="10dp"
-                    android:text="参数设置"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Display1"
-                    android:textColor="#2962FF"
-                    android:textSize="24sp" />
+                android:layout_height="67dp"
+                android:background="#80D8FF"
+                android:gravity="center"
+                android:padding="10dp"
+                android:text="参数设置"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                android:textColor="#2962FF"
+                android:textSize="24sp" />
 
 
+            <Switch
+                android:id="@+id/mapswitch"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:text="开启地图功能" />
 
-                <RadioButton
-                    android:id="@+id/radioButton1"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="室外 ———— 九轴滤波" />
-
-                <RadioButton
-                    android:id="@+id/radioButton2"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="室内 ———— 六轴滤波" />
-
-            </RadioGroup>
+            <Switch
+                android:id="@+id/filterswitch"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:text="六轴滤波" />
 
             <EditText
                 android:id="@+id/stepDetectorThreadValue"

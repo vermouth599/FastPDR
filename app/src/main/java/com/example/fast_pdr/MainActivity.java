@@ -16,8 +16,10 @@ import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.widget.CompoundButton;
 import android.widget.ProgressBar;
 import android.widget.RadioGroup;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.EditText;
 import android.text.TextWatcher;
@@ -73,7 +75,7 @@ public class MainActivity  extends AppCompatActivity {
 
     private SensorEventListener accelerometerEventListener;
     private Sensor accelerometerSensor;
-    
+
     private SensorEventListener gyroscopeEventListener;
     private Sensor gyroscopeSensor;
 
@@ -106,7 +108,7 @@ public class MainActivity  extends AppCompatActivity {
     private PDR pdr;
 
     private Handler handler = new Handler();
-    
+
     // 创建一个单线程的ExecutorService
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -122,9 +124,9 @@ public class MainActivity  extends AppCompatActivity {
                         // 在后台线程中执行耗时的操作
                         // 注意，需要使用PostInvalidate
                         pdrdata.synchronize();
-                        pdr.from_main(stepDetectorSensor.stepList,stepDetectorSensor.lengthList,pdrdata.last_index,pdrdata.last_time,pdrdata.Buffer,pdrdata.buff_count);
+                        pdr.from_main(stepDetectorSensor.stepList, stepDetectorSensor.lengthList, pdrdata.last_index, pdrdata.last_time, pdrdata.Buffer, pdrdata.buff_count);
 
-                        
+
                     } catch (Exception e) {
                         pdrdata.printdata();
                         e.printStackTrace();
@@ -135,7 +137,6 @@ public class MainActivity  extends AppCompatActivity {
             handler.postDelayed(this, 400);
         }
     };
-    
 
 
     private long startTime; // 记录开始时间
@@ -143,13 +144,11 @@ public class MainActivity  extends AppCompatActivity {
 
     // 创建传感器数据缓冲区
     Datalist pdrdata = new Datalist();
-    
-
 
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        
+
         super.onRequestPermissionsResult(requestCode, permissions, grantResults); // 调用父类的方法
         if (requestCode == 0) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -164,9 +163,6 @@ public class MainActivity  extends AppCompatActivity {
 
         StepTextView.setText(text);
     }
-
-
-
 
 
     @Override
@@ -197,9 +193,6 @@ public class MainActivity  extends AppCompatActivity {
         charthelper3.settitle("磁场传感器数据");
 
         CanvasView myCanvasView = (CanvasView) findViewById(R.id.canvas_view);
-        
-
-
 
 
         // 检查外部存储是否可用
@@ -214,30 +207,43 @@ public class MainActivity  extends AppCompatActivity {
         fileIO.setDirTime();
 
 
-
-        mapini.updatePrivacyShow(this,true,true);
-        mapini.updatePrivacyAgree(this,true);
+        mapini.updatePrivacyShow(this, true, true);
+        mapini.updatePrivacyAgree(this, true);
 
         //获取地图控件引用
         mapManager = new MapManager(this, R.id.map);
         //在activity执行onCreate时执行mMapView.onCreate(savedInstanceState)，创建地图
         mapManager.initializeMap(savedInstanceState);
 
-        pdr = new PDR(myCanvasView,mapManager);
+        pdr = new PDR(myCanvasView, mapManager);
 
-        RadioGroup radioGroup = (RadioGroup) findViewById(R.id.radioGroup);
-        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                if(checkedId == R.id.radioButton1) {
-                    pdr.inside = 1;
-                } else if(checkedId == R.id.radioButton2) {
-                    pdr.inside = 0;
-                } 
+        // 获取对Switch的引用
+        Switch UseMap = (Switch) findViewById(R.id.mapswitch);
+        Switch Fliter6 = (Switch) findViewById(R.id.filterswitch);
+
+        UseMap.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    pdr.usemap = true;
+                } else {
+                    pdr.usemap = false;
+                }
             }
         });
+
+        Fliter6.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    pdr.fliter_6 = true;
+                } else {
+                    pdr.fliter_6 = false;
+                }
+            }
+        });
+
+
         ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        
+
         // 获取传感器管理器
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
@@ -255,9 +261,9 @@ public class MainActivity  extends AppCompatActivity {
         String fileName = "data.txt";
 
 
-        threadValueEditText = (EditText)findViewById(R.id.stepDetectorThreadValue);
-        intervalEditText = (EditText)findViewById(R.id.stepDetectorInterval);
-        omegaEditText = (EditText)findViewById(R.id.omega_);
+        threadValueEditText = (EditText) findViewById(R.id.stepDetectorThreadValue);
+        intervalEditText = (EditText) findViewById(R.id.stepDetectorInterval);
+        omegaEditText = (EditText) findViewById(R.id.omega_);
 
         threadValueEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -319,11 +325,9 @@ public class MainActivity  extends AppCompatActivity {
             }
         });
 
-        
 
         // 创建传感器事件监听器
-        accelerometerEventListener   = new SensorEventListener()
-        {
+        accelerometerEventListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
                 // 处理传感器数据变化事件
@@ -336,11 +340,11 @@ public class MainActivity  extends AppCompatActivity {
                         // 记录第一个传感器事件的时间戳
                         startTime = event.timestamp;
                     }
-                    
-                    
+
+
                     // 获取传感器回调的时间戳
                     long timestamp = event.timestamp;
-                    
+
                     //long timestamp = System.currentTimeMillis();
 
                     long elapsedTime = timestamp - startTime;
@@ -349,24 +353,22 @@ public class MainActivity  extends AppCompatActivity {
 
                     double elapsedTime_ = elapsedTime / 1000000.0;
 
-                    stepDetectorSensor.from_accel(elapsedTime_,accelx,accely,accelz);
+                    stepDetectorSensor.from_accel(elapsedTime_, accelx, accely, accelz);
 
                     // 更新UI界面，显示加速度数据
-                    String accelerationText = "2 "+ elapsedTime_ + " " + accelx + " " + accely + " " + accelz;
+                    String accelerationText = "2 " + elapsedTime_ + " " + accelx + " " + accely + " " + accelz;
                     accelerationTextView.setText(accelerationText);
 
                     // 存储传感器数据到缓冲区
-                    pdrdata.addAccelData(elapsedTime_,accelx, accely, accelz, mode);
-                    
+                    pdrdata.addAccelData(elapsedTime_, accelx, accely, accelz, mode);
 
-                    
+
                     charthelper.addEntry(accelx, accely, accelz);
-                    
-                    
+
+
                     // 将传感器数据写入文件
                     String content = accelerationText + "\n";
                     fileIO.writeToFile(fileName, content);
-
 
 
                 }
@@ -392,18 +394,18 @@ public class MainActivity  extends AppCompatActivity {
                         // 记录第一个传感器事件的时间戳
                         startTime = event.timestamp;
                     }
-                    
+
                     long timestamp = event.timestamp;
-                    
+
                     // long timestamp = System.currentTimeMillis();
 
-                    long elapsedTime = timestamp - startTime; 
+                    long elapsedTime = timestamp - startTime;
 
                     double elapsedTime_ = elapsedTime / 1000000.0;
                     // 将陀螺仪传感器数据合并为一个字符串
-                    String gyroscopeData = "1 "+ elapsedTime_ + " " + gyroX + " " + gyroY + " " + gyroZ;
+                    String gyroscopeData = "1 " + elapsedTime_ + " " + gyroX + " " + gyroY + " " + gyroZ;
                     gyroTextView.setText(gyroscopeData);
-                    
+
                     // 存储传感器数据到缓冲区
                     pdrdata.addGyroData(elapsedTime_, gyroX, gyroY, gyroZ, mode);
 
@@ -411,7 +413,6 @@ public class MainActivity  extends AppCompatActivity {
 
                     String content = gyroscopeData + "\n";
                     fileIO.writeToFile(fileName, content);
-
 
 
                 }
@@ -437,8 +438,8 @@ public class MainActivity  extends AppCompatActivity {
                         // 记录第一个传感器事件的时间戳
                         startTime = event.timestamp;
                     }
-                    
-                    
+
+
                     long timestamp = event.timestamp;
                     // long timestamp = System.currentTimeMillis();
 
@@ -446,9 +447,9 @@ public class MainActivity  extends AppCompatActivity {
 
                     double elapsedTime_ = elapsedTime / 1000000.0;
                     // 将磁场传感器数据合并为一个字符串
-                    String magneticFieldData = "3 "+ elapsedTime_ + " " + magneticX + " " + magneticY + " " + magneticZ;
+                    String magneticFieldData = "3 " + elapsedTime_ + " " + magneticX + " " + magneticY + " " + magneticZ;
                     magneticFieldTextView.setText(magneticFieldData);
-                    
+
                     // 存储传感器数据到缓冲区
                     pdrdata.addMagData(elapsedTime_, magneticX, magneticY, magneticZ, mode);
 
@@ -468,49 +469,42 @@ public class MainActivity  extends AppCompatActivity {
         // 首先获取GPS位置
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationListener = new LocationListener() {
-           @Override
-           public void onLocationChanged(Location location) {
-                
-               
-            
-               double timestamp = 0.0;
+            @Override
+            public void onLocationChanged(Location location) {
 
-               
 
-               
-               if (location != null) {
-                double latitude = location.getLatitude();
-                double longitude = location.getLongitude();
-                double altitude = location.hasAltitude() ? location.getAltitude() : Double.NaN;
-            
-                // Check if the values are valid
-                if (latitude != 0.0 && longitude != 0.0 && !Double.isNaN(altitude)) {
-                    pdrdata.addLocationData(timestamp, latitude, longitude, altitude);
-                }
+                double timestamp = 0.0;
+
+
+                if (location != null) {
+                    double latitude = location.getLatitude();
+                    double longitude = location.getLongitude();
+                    double altitude = location.hasAltitude() ? location.getAltitude() : Double.NaN;
+
+                    // Check if the values are valid
+                    if (latitude != 0.0 && longitude != 0.0 && !Double.isNaN(altitude)) {
+                        pdrdata.addLocationData(timestamp, latitude, longitude, altitude);
+                    }
                 }
 
-               // 检查三个值是否为空
+                // 检查三个值是否为空
 
 
-              
+            }
 
-               
-                
-           }
+            // 提供一个返回位置信息的接口
 
-           // 提供一个返回位置信息的接口
-           
-           
+
         };
 
-        
+
         // 在按钮的点击事件中注册传感器监听器
         startButton.setOnClickListener(new View.OnClickListener() {
 
             public void onClick(View v) {
                 startTime = 0;
                 mode = 2;
-                sensorManager.registerListener(accelerometerEventListener, accelerometerSensor,SensorManager.SENSOR_DELAY_GAME);
+                sensorManager.registerListener(accelerometerEventListener, accelerometerSensor, SensorManager.SENSOR_DELAY_GAME);
                 sensorManager.registerListener(gyroscopeEventListener, gyroscopeSensor, SensorManager.SENSOR_DELAY_GAME);
                 sensorManager.registerListener(magneticFieldEventListener, magneticFieldSensor, SensorManager.SENSOR_DELAY_GAME);
                 handler.postDelayed(runnable, 400);
@@ -529,28 +523,27 @@ public class MainActivity  extends AppCompatActivity {
                 pdrdata.printBuffer();
                 // 把位置信息写入文件
                 for (int i = 0; i < pdr.X_list.size(); i++) {
-                    String content = " " +  pdr.X_list.get(i) + " " + pdr.Y_list.get(i) + " " +  "\n";
+                    String content = " " + pdr.X_list.get(i) + " " + pdr.Y_list.get(i) + " " + "\n";
                     fileIO.writeToFile("location.txt", content);
                 }
                 // 把步长信息写入文件
                 for (int i = 0; i < stepDetectorSensor.lengthList.size(); i++) {
-                    String content = " " +  stepDetectorSensor.lengthList.get(i) + "\n";
+                    String content = " " + stepDetectorSensor.lengthList.get(i) + "\n";
                     fileIO.writeToFile("step_length.txt", content);
                 }
                 // 把yaw角信息写入文件
                 for (int i = 0; i < pdr.yaw_list.size(); i++) {
-                    String content = " " +  pdr.yaw_list.get(i) + "\n";
+                    String content = " " + pdr.yaw_list.get(i) + "\n";
                     fileIO.writeToFile("yaw.txt", content);
-                }  
+                }
                 // 把步的时间信息写入文件
                 for (int i = 0; i < stepDetectorSensor.stepList.size(); i++) {
-                    String content = " " +  stepDetectorSensor.stepList.get(i) + "\n";
+                    String content = " " + stepDetectorSensor.stepList.get(i) + "\n";
                     fileIO.writeToFile("step_time.txt", content);
                 }
                 // 把buff的时间信息写入文件
-                for (int i = 0; i < pdr.time_List.size(); i++)
-                {
-                    String content = " " +  pdr.time_List.get(i) + "\n";
+                for (int i = 0; i < pdr.time_List.size(); i++) {
+                    String content = " " + pdr.time_List.get(i) + "\n";
                     fileIO.writeToFile("buff_time.txt", content);
                 }
                 // 清理图
@@ -563,8 +556,7 @@ public class MainActivity  extends AppCompatActivity {
             }
         });
 
-        clearButton.setOnClickListener(new View.OnClickListener() 
-        {
+        clearButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 pdrdata.clear();
                 pdr.clear();
@@ -581,12 +573,12 @@ public class MainActivity  extends AppCompatActivity {
             public void onClick(View v) {
                 double TDR = pdr.TDR(stepDetectorSensor.lengthList);
                 // 输出百分比
-                String TDRText = "TDR: " + TDR/100 + "%";
+                String TDRText = "TDR: " + TDR*100 + "%";
                 LocationTextView.setText(TDRText);
             }
         });
 
-        initializeButton.setOnClickListener(new View.OnClickListener(){
+        initializeButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // 创建一个AlertDialog
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
@@ -615,7 +607,6 @@ public class MainActivity  extends AppCompatActivity {
                                 }).start();
 
 
-
                                 // 首先注册GPS位置监听器
                                 // 检查是否有访问位置信息的权限
                                 if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -625,11 +616,11 @@ public class MainActivity  extends AppCompatActivity {
                                     // 如果有权限，请求位置更新
                                     locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
                                 }
-                                sensorManager.registerListener(accelerometerEventListener, accelerometerSensor,20000);
+                                sensorManager.registerListener(accelerometerEventListener, accelerometerSensor, 20000);
                                 sensorManager.registerListener(gyroscopeEventListener, gyroscopeSensor, 20000);
                                 sensorManager.registerListener(magneticFieldEventListener, magneticFieldSensor, 20000);
-                                
-                            
+
+
                                 // 创建一个Handler来延迟执行代码
                                 new Handler().postDelayed(new Runnable() {
                                     @Override
@@ -647,13 +638,10 @@ public class MainActivity  extends AppCompatActivity {
                                         pdrdata.gyro_DataList.clear();
                                         pdrdata.mag_DataList.clear();
                                         pdrdata.Location_DataList.clear();
-                                        
+
                                     }
                                 }, 5000);  // 延迟5秒执行
 
-
-                                
-                            
 
                             }
                         });
@@ -663,14 +651,14 @@ public class MainActivity  extends AppCompatActivity {
 
             }
         });
-        
-    
-    
+
+
     }
-
-
-
 }
+
+
+
+
 
 
 
