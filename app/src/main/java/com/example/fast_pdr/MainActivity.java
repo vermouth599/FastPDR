@@ -16,6 +16,7 @@ import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.util.Log;
 import android.widget.CompoundButton;
 import android.widget.ProgressBar;
 import android.widget.RadioGroup;
@@ -26,6 +27,10 @@ import android.text.TextWatcher;
 import android.text.Editable;
 
 
+import com.amap.api.location.AMapLocation;
+import com.amap.api.location.AMapLocationClient;
+import com.amap.api.location.AMapLocationClientOption;
+import com.amap.api.location.AMapLocationListener;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.MapsInitializer;
@@ -47,6 +52,8 @@ import android.view.View;
 import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.widget.Toast;
+
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
@@ -61,8 +68,8 @@ import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-
-
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
 
 
 public class MainActivity  extends AppCompatActivity {
@@ -70,8 +77,19 @@ public class MainActivity  extends AppCompatActivity {
     private MapManager mapManager;
     private CanvasView customCanvas;
     private SensorManager sensorManager;
-
+    //请求权限码
+    private static final int REQUEST_PERMISSIONS = 9527;
     MapsInitializer mapini;
+
+    //声明AMapLocationClient类对象
+    public AMapLocationClient mLocationClient = null;
+    //声明定位回调监听器
+    public AMapLocationClientOption mLocationOption = null;
+
+    public AMapLocationListener mAMapLocationListener;
+
+    //声明定位回调监听器
+
 
     private SensorEventListener accelerometerEventListener;
     private Sensor accelerometerSensor;
@@ -146,23 +164,86 @@ public class MainActivity  extends AppCompatActivity {
     Datalist pdrdata = new Datalist();
 
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults); // 调用父类的方法
-        if (requestCode == 0) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // 用户接受了请求，你的应用程序现在可以写入外部存储
-            } else {
-                // 用户拒绝了请求，你的应用程序不能写入外部存储
-            }
-        }
-    }
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+//
+//        super.onRequestPermissionsResult(requestCode, permissions, grantResults); // 调用父类的方法
+//        if (requestCode == 0) {
+//            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                // 用户接受了请求，你的应用程序现在可以写入外部存储
+//            } else {
+//                // 用户拒绝了请求，你的应用程序不能写入外部存储
+//            }
+//        }
+//    }
 
     public void updateTextView(String text) {
 
         StepTextView.setText(text);
     }
+    @AfterPermissionGranted(REQUEST_PERMISSIONS)
+    private void requestPermission() {
+        String[] permissions = {
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.READ_PHONE_STATE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.INTERNET,
+                Manifest.permission.ACCESS_NETWORK_STATE,
+                Manifest.permission.ACCESS_WIFI_STATE
+        };
+
+        if (EasyPermissions.hasPermissions(this, permissions)) {
+            //true 有权限 开始定位
+
+            showMsg("已获得权限，可以定位啦！");
+        } else {
+            //false 无权限
+            EasyPermissions.requestPermissions(this, "需要权限", REQUEST_PERMISSIONS, permissions);
+            showMsg("没有权限！");
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        //设置权限请求结果
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+    }
+
+    private void showMsg(String msg){
+        Toast.makeText(this,msg,Toast.LENGTH_SHORT).show();
+    }
+
+
+    public void initLocation() {
+        //初始化定位
+        try {
+            mLocationClient = new AMapLocationClient(getApplicationContext());
+        } catch (Exception e) {
+            e.printStackTrace();
+            showMsg("无法初始化AMapLocationClient");
+        }
+        if (mLocationClient != null) {
+            //设置定位回调监听
+            mLocationClient.setLocationListener(mAMapLocationListener);
+            //初始化AMapLocationClientOption对象
+            mLocationOption = new AMapLocationClientOption();
+            //设置定位模式为AMapLocationMode.Hight_Accuracy，高精度模式。
+            mLocationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
+            //获取最近3s内精度最高的一次定位结果：
+            //设置setOnceLocationLatest(boolean b)接口为true，启动定位时SDK会返回最近3s内精度最高的一次定位结果。如果设置其为true，setOnceLocation(boolean b)接口也会被设置为true，反之不会，默认为false。
+            mLocationOption.setOnceLocationLatest(true);
+            //设置是否返回地址信息（默认返回地址信息）
+            mLocationOption.setNeedAddress(true);
+            //设置定位请求超时时间，单位是毫秒，默认30000毫秒，建议超时时间不要低于8000毫秒。
+            mLocationOption.setHttpTimeOut(20000);
+            //关闭缓存机制，高精度定位会产生缓存。
+            mLocationOption.setLocationCacheEnable(false);
+            //给定位客户端对象设置定位参数
+            mLocationClient.setLocationOption(mLocationOption);
+        }
+    }
+
 
 
     @Override
@@ -207,8 +288,44 @@ public class MainActivity  extends AppCompatActivity {
         fileIO.setDirTime();
 
 
+        mAMapLocationListener = new AMapLocationListener(){
+            @Override
+            public void onLocationChanged(AMapLocation amapLocation) {
+
+                double timestamp = 0;
+
+                if (amapLocation != null) {
+                    if (amapLocation.getErrorCode() == 0) {
+                        double B = amapLocation.getLatitude();
+                        double L = amapLocation.getLongitude();
+                        double accuracy = (double) amapLocation.getAccuracy();
+
+                        showMsg("成功定位！精度为：" + accuracy);
+
+                        pdrdata.addLocationData(timestamp, B, L, accuracy);
+
+
+                    }else {
+                        //定位失败时，可通过ErrCode（错误码）信息来确定失败的原因，errInfo是错误信息，详见错误码表。
+                        Log.e("AmapError","location Error, ErrCode:"
+                                + amapLocation.getErrorCode() + ", errInfo:"
+                                + amapLocation.getErrorInfo());
+                    }
+                }
+
+            }
+        };
+        mLocationClient.updatePrivacyShow(this, true, true);
+        mLocationClient.updatePrivacyAgree(this,true);
+        initLocation();
+        requestPermission();
+
+
+
+
         mapini.updatePrivacyShow(this, true, true);
         mapini.updatePrivacyAgree(this, true);
+
 
         //获取地图控件引用
         mapManager = new MapManager(this, R.id.map);
@@ -607,18 +724,19 @@ public class MainActivity  extends AppCompatActivity {
                                 }).start();
 
 
-                                // 首先注册GPS位置监听器
-                                // 检查是否有访问位置信息的权限
-                                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                                    // 如果没有权限，请求用户授予权限
-                                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
-                                } else {
-                                    // 如果有权限，请求位置更新
-                                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-                                }
+//                                // 首先注册GPS位置监听器
+//                                // 检查是否有访问位置信息的权限
+//                                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//                                    // 如果没有权限，请求用户授予权限
+//                                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
+//                                } else {
+//                                    // 如果有权限，请求位置更新
+//                                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+//                                }
                                 sensorManager.registerListener(accelerometerEventListener, accelerometerSensor, 20000);
                                 sensorManager.registerListener(gyroscopeEventListener, gyroscopeSensor, 20000);
                                 sensorManager.registerListener(magneticFieldEventListener, magneticFieldSensor, 20000);
+                                mLocationClient.startLocation();
 
 
                                 // 创建一个Handler来延迟执行代码
@@ -629,9 +747,10 @@ public class MainActivity  extends AppCompatActivity {
                                         sensorManager.unregisterListener(accelerometerEventListener);
                                         sensorManager.unregisterListener(gyroscopeEventListener);
                                         sensorManager.unregisterListener(magneticFieldEventListener);
-                                        locationManager.removeUpdates(locationListener);
+//                                        locationManager.removeUpdates(locationListener);
+                                        mLocationClient.stopLocation();
                                         pdr.Initialize(pdrdata.accel_DataList, pdrdata.mag_DataList, pdrdata.Location_DataList);
-                                        String locationText = "r: " + pdr.initial_r + " theta: " + pdr.initial_theta + "\n 真北角: " + pdr.Phi_m + "\n B: " + pdr.initial_B + " L: " + pdr.initial_L + " H: " + pdr.initial_H;
+                                        String locationText = "r: " + pdr.initial_r + " theta: " + pdr.initial_theta + "\n 真北角: " + pdr.Phi_m + "\n B: " + pdr.initial_B + " L: " + pdr.initial_L + " 精度: " + pdr.initial_H;
                                         LocationTextView.setText(locationText);
                                         // 清除内存
                                         pdrdata.accel_DataList.clear();

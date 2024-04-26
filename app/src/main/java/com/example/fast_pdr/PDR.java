@@ -14,6 +14,7 @@ import org.locationtech.proj4j.*;
 import com.example.fast_pdr.CanvasView;
 import com.example.fast_pdr.MapManager;
 
+
 public class PDR {
 
     // Create a Handler for the main thread
@@ -170,25 +171,29 @@ public class PDR {
             
         
         
-            // 位置取平均值
+            // 遍历列表的get_z()方法，找到精度最高的一个，并取值
+            initial_H = Location_DataList.get(0).getZ();
+            initial_B = Location_DataList.get(0).getX();
+            initial_L = Location_DataList.get(0).getY();
+    
             for (int i = 0; i < Location_DataList.size(); i++)
             {
-                B += Location_DataList.get(i).getX();
-                L += Location_DataList.get(i).getY();
-                H += Location_DataList.get(i).getZ();
+                if (Location_DataList.get(i).getZ() < initial_H)
+                {
+                    initial_H = Location_DataList.get(i).getZ();
+                    initial_B = Location_DataList.get(i).getX();
+                    initial_L = Location_DataList.get(i).getY();
+                    
+                }
             }
 
-            B /= Location_DataList.size();
-            L /= Location_DataList.size();
-            H /= Location_DataList.size();
 
-            initial_B = B;
-            initial_L = L;
-            initial_H = H;
+        
+
         }
 
         Phi_m = Phi_m * Math.PI / 180; //deg to rad
-        
+
         // 转换为四元数
         q_now = fromEuler(initial_r, initial_theta, Phi_m);
 
@@ -208,13 +213,19 @@ public class PDR {
         canvasView.drawPoint((float)X_,(float)Y_);
         if (usemap == true) {
             mMapManager.setcentralpoint(initial_B, initial_L);//TODO:改成INITIAL_BL，仅为测试用
+            // 现在改为用高德地图获取位置，获取的是高德坐标
 //            mMapManager.testMoveToPoint();
         }
 
-       
+        double[] WGS84coord = mMapManager.GAODE2GPS(initial_B,initial_L);
+        initial_B = WGS84coord[0];
+        initial_L = WGS84coord[1];
 
 
-        
+
+
+
+
 
     }
 
@@ -491,7 +502,7 @@ public class PDR {
         if (usemap == true) {
             // 转换坐标
             double[] BL;
-            BL = xyToBL(X_, Y_, initial_B, initial_L);
+            BL = xyToBL(X_, Y_, initial_B, initial_L);//WGS84 经纬度
              B_ =  BL[0];
              L_ =  BL[1];
              Log.d("B_", String.valueOf(B_));
@@ -547,7 +558,7 @@ public class PDR {
         ProjCoordinate dstCoord = new ProjCoordinate();
         transform.transform(srcCoord, dstCoord);
 
-        Log.d("dstCoord", " B: " + dstCoord.x + " L: " + dstCoord.y); // x - 东方向  y - 北方向
+        Log.d("dstCoord", " 高斯X: " + dstCoord.x + " 高斯Y: " + dstCoord.y); // x - 东方向  y - 北方向
 
         double X_0 = dstCoord.x; //坐标轴原点的东方向值，理应为500000.0
         double Y_0 = dstCoord.y; //坐标轴原点的北方向值，理应为0.0

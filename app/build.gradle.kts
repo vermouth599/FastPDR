@@ -36,7 +36,8 @@ android {
 
 dependencies {
     implementation("com.amap.api:3dmap:latest.integration")
-    //implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
+//    implementation("com.amap.api:location:latest.integration")
+//    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.9.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
@@ -46,6 +47,8 @@ dependencies {
     implementation ("org.locationtech.proj4j:proj4j:1.1.3")
     implementation ("androidx.viewpager2:viewpager2:1.0.0")
     implementation ("androidx.recyclerview:recyclerview:1.2.1")
+    implementation ("pub.devrel:easypermissions:3.0.0")
+//    implementation ("com.github.zjjfly:eviltransform:1.0.0")
 
     testImplementation("junit:junit:4.13.2")
 

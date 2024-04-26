@@ -22,9 +22,11 @@ import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.PolylineOptions;
 import com.amap.api.maps.utils.overlay.MovingPointOverlay;
+import com.example.fast_pdr.GJC2WGS;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.LogManager;
 
 public class MapManager {
 
@@ -60,7 +62,8 @@ public class MapManager {
     }
 
     public void setcentralpoint (double latitude, double longitude) {
-        this.Last_Position = GPS2GAODE(latitude, longitude);
+//        this.Last_Position = GPS2GAODE(latitude, longitude);
+        this.Last_Position = new LatLng(latitude,longitude); //初始化改为了用高德获取坐标，因此得到的是高德坐标系下的坐标
         marker = aMap.addMarker(new MarkerOptions().position(Last_Position));
         movingPointOverlay = new MovingPointOverlay(aMap, marker);
         CameraUpdate mCameraUpdate = CameraUpdateFactory.newCameraPosition(new CameraPosition(Last_Position,19,0,0));
@@ -78,7 +81,11 @@ public class MapManager {
      */
 
     public void moveToPoint(double latitude, double longitude) { // deg deg
+
+        
         LatLng newPosition = GPS2GAODE(latitude, longitude); // Convert GPS coordinates to AMap coordinates (GAODE)
+        Log.d("MapManager", "from current position: " + Last_Position.latitude + " " + Last_Position.longitude);
+        Log.d("MapManager", "move to newPosition: " + newPosition.latitude + " " + newPosition.longitude);
         List<LatLng> path = new ArrayList<>();
         path.add(Last_Position);  // Current position
         path.add(newPosition);  // New position
@@ -124,6 +131,22 @@ public class MapManager {
         Log.d("MapManager", "GAODE: " + desLatLng.latitude + " " + desLatLng.longitude);
         return desLatLng;
     }
+
+    // 传入高德地图的经纬度，得到WGS84的经纬度
+    public double[] GAODE2GPS(double lat,double lon) {
+
+        GJC2WGS converter = new GJC2WGS();
+        double[] wgs = converter.gcj2wgs_exact(lat,lon);
+        Log.d("MapManager", "GAODE: " + lat + " " + lon);
+        Log.d("MapManager", "GPS: " + wgs[0] + " " + wgs[1]);
+        
+        return wgs;
+
+    }
+
+
+
+
     public void onDestroy() {
         mMapView.onDestroy();
     }
